@@ -18,9 +18,10 @@ public class Utilities {
 			/* Driver login flow */
 			{"DriverLogin", "Choose Language", "Kannada", "//android.widget.TextView[@text='Kannada']", "", "driver"},
 			{"DriverLogin", "Choose Language", "Hindi", "//android.widget.TextView[@text='Hindi']", "", "driver"},
+			{"DriverLogin", "Choose Language", "Tamil", "//android.widget.TextView[@text='Tamil']", "", "driver"},
 			{"DriverLogin", "Choose Language", "English", "//android.widget.TextView[contains(@text,'English')]", "", "driver"},
 			{"DriverLogin", "Choose Language", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
-			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter mobile number']", "8999509896", "driver"},
+			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter mobile number']", "9999999920", "driver"},
 			{"DriverLogin", "Mobile Number", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
 			{"DriverLogin", "Otp", "OTP", "//android.widget.EditText[@text='Auto Reading OTP...']", "7891", "driver"},
 			{"DriverLogin", "Permission", "Location Access", "//android.widget.TextView[@text='Location Access']", "", "driver"},
@@ -93,14 +94,14 @@ public class Utilities {
             {"HamburgerFlow", "Share App", "Share App", "//android.widget.TextView[@text='Share App']", "", "user"},
             {"HamburgerFlow", "Share App", "Copy Link", "//android.widget.Button[@text='Copy']", "", "user"},
             /* Stats dashboard */
-//            {"HamburgerFlow", "Stats", "stats dashboard", "//android.widget.TextView[@text='Live Stats Dashboard']", "", "user"},
-            // have to add android back
+            {"HamburgerFlow", "Stats", "stats dashboard", "//android.widget.TextView[@text='Live Stats Dashboard']", "", "user"},
+            {"HamburgerFlow", "Stats Dashboard", "Back Press", "", "", "user"},
             /* About */
             {"HamburgerFlow", "About", "About", "//android.widget.TextView[@text='About']", "", "user"},
             {"HamburgerFlow", "About", "Back Icon", "//android.widget.TextView[@text='About']/../android.widget.LinearLayout/android.widget.ImageView", "", "user"},
             /* Logout */
-//            {"HamburgerFlow", "Logout", "logout", "//android.widget.TextView[@text='Logout']", "", "user"},
-            // have to add android back
+            {"HamburgerFlow", "Logout", "Logout", "//android.widget.TextView[@text='Logout']", "", "user"},
+            {"HamburgerFlow", "Logout Section", "Back Press", "", "", "user"},
 
 	};
 	
@@ -115,9 +116,10 @@ public class Utilities {
 			/* Driver login flow */
 			{"DriverLogin", "Choose Language", "Kannada", "//android.widget.TextView[@text='Kannada']", "", "driver"},
 			{"DriverLogin", "Choose Language", "Hindi", "//android.widget.TextView[@text='Hindi']", "", "driver"},
+			{"DriverLogin", "Choose Language", "Tamil", "//android.widget.TextView[@text='Tamil']", "", "driver"},
 			{"DriverLogin", "Choose Language", "English", "//android.widget.TextView[contains(@text,'English')]", "", "driver"},
 			{"DriverLogin", "Choose Language", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
-			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter mobile number']", "8999509896", "driver"},
+			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter mobile number']", "9999999920", "driver"},
 			{"DriverLogin", "Mobile Number", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
 			{"DriverLogin", "Otp", "OTP", "//android.widget.EditText[@text='Auto Reading OTP...']", "7891", "driver"},
 			{"DriverLogin", "Permission", "Location Access", "//android.widget.TextView[@text='Location Access']", "", "driver"},
@@ -180,16 +182,16 @@ public class Utilities {
             {"HamburgerFlow", "Language", "Select English", "//android.widget.TextView[@text='English']", "", "user"},
             {"HamburgerFlow", "Language", "Update to English", "//android.widget.TextView[@text='अपडेट']", "", "user"},
             /* About */
-//            {"HamburgerFlow", "Hamburger Section", "About", "//android.widget.TextView[@text='About']", "", "user"},
-//			{"HamburgerFlow", "About", "T&C", "//android.widget.TextView[@text='T&C']", "", "user"},
-//			{"HamburgerFlow", "About Popup", "Choose Account", "//android.widget.TextView[@text='Select an account']/../../../android.widget.LinearLayout/../android.widget.FrameLayout/android.widget.ListView/android.widget.CheckedTextView[2]", "", "user"},
-//			{"HamburgerFlow", "About Popup", "Click Ok", "//android.widget.Button[@text='OK']", "", "user"},
-//			{"HamburgerFlow", "T&C Document", "Cross Icon", "//android.widget.TextView[@text='NAMMA_YATRI_T&C.docx']/../../android.widget.ImageButton", "", "user"},
-//			{"HamburgerFlow", "About", "Privacy Policy", "//android.widget.TextView[@text='Privacy Policy']", "", "user"},
-//			{"HamburgerFlow", "About Popup", "Choose Account", "//android.widget.TextView[@text='Select an account']/../../../android.widget.LinearLayout/../android.widget.FrameLayout/android.widget.ListView/android.widget.CheckedTextView[2]", "", "user"},
-//			{"HamburgerFlow", "About Popup", "Click Ok", "//android.widget.Button[@text='OK']", "", "user"},
-//			{"HamburgerFlow", "Privacy Policy Document", "Cross Icon", "//android.widget.TextView[@text='PRIVACY_POLICY_NAMMA_YATRI.docx']/../../android.widget.ImageButton", "", "user"},
-//			{"HamburgerFlow", "About", "Back Icon", "//android.widget.TextView[@text='About']/../android.widget.LinearLayout/android.widget.ImageView", "", "user"},
+            // {"HamburgerFlow", "Hamburger Section", "About", "//android.widget.TextView[@text='About']", "", "user"},
+			// {"HamburgerFlow", "About", "T&C", "//android.widget.TextView[@text='T&C']", "", "user"},
+			// {"HamburgerFlow", "About Popup", "Choose Account", "//android.widget.TextView[@text='Select an account']/../../../android.widget.LinearLayout/../android.widget.FrameLayout/android.widget.ListView/android.widget.CheckedTextView[2]", "", "user"},
+			// {"HamburgerFlow", "About Popup", "Click Ok", "//android.widget.Button[@text='OK']", "", "user"},
+			// {"HamburgerFlow", "T&C Document", "Cross Icon", "//android.widget.TextView[@text='NAMMA_YATRI_T&C.docx']/../../android.widget.ImageButton", "", "user"},
+			// {"HamburgerFlow", "About", "Privacy Policy", "//android.widget.TextView[@text='Privacy Policy']", "", "user"},
+			// {"HamburgerFlow", "About Popup", "Choose Account", "//android.widget.TextView[@text='Select an account']/../../../android.widget.LinearLayout/../android.widget.FrameLayout/android.widget.ListView/android.widget.CheckedTextView[2]", "", "user"},
+			// {"HamburgerFlow", "About Popup", "Click Ok", "//android.widget.Button[@text='OK']", "", "user"},
+			// {"HamburgerFlow", "Privacy Policy Document", "Cross Icon", "//android.widget.TextView[@text='PRIVACY_POLICY_NAMMA_YATRI.docx']/../../android.widget.ImageButton", "", "user"},
+			// {"HamburgerFlow", "About", "Back Icon", "//android.widget.TextView[@text='About']/../android.widget.LinearLayout/android.widget.ImageView", "", "user"},
             /* Logout */
             {"HamburgerFlow", "Hamburger Section", "Logout", "//android.widget.TextView[@text='Logout']", "", "user"},
             {"HamburgerFlow", "Logout Popup", "Go Back", "//android.widget.TextView[@text='Go Back']", "", "user"},

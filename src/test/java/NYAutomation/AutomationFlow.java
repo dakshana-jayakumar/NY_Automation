@@ -11,21 +11,77 @@ import org.testng.annotations.Test;
 import base.BaseClass;
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.nativekey.AndroidKey;
+import io.appium.java_client.android.nativekey.KeyEvent;
 
-public class AutomationFlow extends BaseClass {
+import java.util.Arrays;
+import java.util.Scanner;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+
+import com.aventstack.extentreports.ExtentReports;
+import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.reporter.ExtentSparkReporter;
+
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.Listeners;
+import org.testng.ITestListener;
+import org.testng.ITestResult;
+
+
+@Listeners(NYAutomation.AutomationFlow.class)
+public class AutomationFlow extends BaseClass implements ITestListener{
 
     private String RideOtp = "";
+    private static ExtentTest test; // Updated variable declaration
+    ExtentReports extentReports = setupReport();
 
     @Test
     /* Creating a method for overall flow of the applications */
     private void flow() throws InterruptedException {
-        for (String[] actionParameter : sanityData) {
-            String testCase = actionParameter[0]; /* Variable handles the test cases (eg., user login, hamburger, ride flow and so on) */
-            String state = actionParameter[2]; /* Varaible handles the state of the screen */
-            String xpath = actionParameter[3]; /* variable handles the xpath of the element */
-            String sendKeysValue = actionParameter[4]; /* variable handles whether the action is sendKeys or click */
-            boolean isUser = "user".equals(actionParameter[5]); /* variable handles whether the actions are related to user or driver */
-            checkCase(testCase, state, xpath, sendKeysValue, isUser);
+    	// Get user input to determine which data to use
+    	int dataOption;
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Enter data option (1 for Regression Testing, 2 for Sanity Testing, 3 for Both Tesing):");
+        dataOption = scanner.nextInt();
+        scanner.close();
+
+        String[][] data;
+        if (dataOption == 1) {
+            data = regressionData;
+            System.out.println("Performing Regression Testing");
+        }
+        else if (dataOption == 3) {
+            System.out.println("Performing Both Testing");
+	        data = Arrays.copyOf(sanityData, sanityData.length + regressionData.length);
+	        System.arraycopy(regressionData, 0, data, sanityData.length, regressionData.length);
+        }
+        else {
+            data = sanityData;
+            System.out.println("Performing Sanity Testing");
+        }
+ 
+        for (String[] actionParameter : data) {
+            String testCase = actionParameter[0];
+            String screen = actionParameter[1];
+            String state = actionParameter[2];
+            String xpath = actionParameter[3];
+            String sendKeysValue = actionParameter[4];
+            boolean isUser = "user".equals(actionParameter[5]);
+  
+         /* Create a new test in the report */
+            test = extentReports.createTest(screen, state);
+
+            checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
+          
             System.out.println("XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
         }
 
@@ -33,7 +89,7 @@ public class AutomationFlow extends BaseClass {
     }
 
     /* method used to code all the types of functions to be handled */
-    public void checkCase(String testCase, String state, String xpath, String sendKeysValue, boolean isUser) {
+    public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws InterruptedException {
         /* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
                 .withTimeout(Duration.ofSeconds(50)) /* Set the timeout duration to 50 seconds */
@@ -60,12 +116,18 @@ public class AutomationFlow extends BaseClass {
         	return;
         }
         
-        /* if any specific testcases has to be performed */
-    //    if (testCase != "UserLogin")
-    //    {
-    //        return;
-
-    //    }
+        /* if any specific cases has to be performed */
+        if ((screen == "Choose Language") && (screen != "Update Language")) {
+        	scrollToText ("Tamil");
+        	
+        }
+        
+        if ((screen == "Stats Dashboard") || (screen == "Logout Section")) {
+        	Thread.sleep(5000);
+            // Add handling of Android back key here
+            user.pressKey(new KeyEvent(AndroidKey.BACK));
+            return;
+        }
 
         /* Button layout locator */
         By buttonLayoutLocator = By.xpath(xpath);
@@ -90,4 +152,90 @@ public class AutomationFlow extends BaseClass {
             wait.until(ExpectedConditions.elementToBeClickable(buttonLayoutLocator)).click();
         }
     }
+    
+    /* Scrolls to the specified text */
+    public void scrollToText(String text) {
+
+		driver.findElement(new AppiumBy.ByAndroidUIAutomator("new UiScrollable(new UiSelector().scrollable(true).instance(0))"
+				+ ".scrollIntoView(new UiSelector()" + ".textMatches(\"" +text+ "\").instance(0))"));
+	}
+          
+        
+        /* Captures a screenshot and replaces the existing screenshot with the latest one */
+    private String getScreenshotPathForUser(String testCase) {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HH");
+        String timestamp = now.format(formatter);
+
+        File userSrcFile = ((TakesScreenshot) user).getScreenshotAs(OutputType.FILE);
+        String userDestFilePath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "screenshots"
+                + File.separator + testCase + "_user_" + timestamp + ".png";
+        saveScreenshot(userSrcFile, userDestFilePath);
+
+        return userDestFilePath;
+    }
+
+    private String getScreenshotPathForDriver(String testCase) {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HH");
+        String timestamp = now.format(formatter);
+
+        File driverSrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+        String driverDestFilePath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "screenshots"
+                + File.separator + testCase + "_driver_" + timestamp + ".png";
+        saveScreenshot(driverSrcFile, driverDestFilePath);
+
+        return driverDestFilePath;
+    }
+
+    public void saveScreenshot(File srcFile, String destFilePath) {
+        // Create destination directory if it doesn't exist
+        File destDir = new File(destFilePath).getParentFile();
+
+        // Replace the existing screenshot file with the latest one
+        try {
+            Files.copy(srcFile.toPath(), new File(destFilePath).toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+        
+        
+    /* Setup ExtentReports */
+    public ExtentReports setupReport() {
+    	String path = System.getProperty("user.dir") + File.separator + File.separator + "src" + File.separator + "main"
+                + File.separator + "java" + File.separator + "NYAutomation" + File.separator+ "Reports" + File.separator +  "report_" + System.currentTimeMillis() + ".html";
+		
+		ExtentSparkReporter reporter = new ExtentSparkReporter(path);
+		reporter.config().setReportName("Namma Yatri Test Report");
+		reporter.config().setDocumentTitle("Test Results");
+		
+		extentReports = new ExtentReports();
+		extentReports.attachReporter(reporter);
+		return extentReports;
+    }
+        
+    @Override
+	public void onTestSuccess(ITestResult result) {
+
+		test.log(Status.PASS, "Test Passed");
+	}
+    
+    @Override
+    public void onTestFailure(ITestResult result) {
+        test.fail(result.getThrowable());
+
+        test.addScreenCaptureFromPath(getScreenshotPathForUser(result.getMethod().getMethodName()));
+
+        test.addScreenCaptureFromPath(getScreenshotPathForDriver(result.getMethod().getMethodName()));
+    }
+
+    /* Tear down ExtentReports */
+    @AfterSuite
+    public void tearDownReport() {
+    	extentReports.flush();
+    }
+    
 }
