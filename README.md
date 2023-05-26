@@ -3,7 +3,7 @@
 AppiumTestAutomation
 ====================
 
-This project exhibits how to do automation testing for Namma Yatri mobile applications using TestNG framework, Appium, Selenium and Java
+This project exhibits how to do automation testing for Namma Yatri mobile applications using TestNG tool, Appium framework, Selenium (additional) and Java
 
 Prerequisite
 =====================
@@ -21,11 +21,11 @@ Installation
 
 Run The Project
 =====================
-1. Run the appium server in terminal or appium application
+1. Run the appium server `appium` or `appium -p <port number>` in terminal or appium application
 2. Check whether the port running in server and in code (src/main/java/base/BaseClass) are same
 3. Import APKs which has to be tested, in the apk location folder : src/main/java/NYAutomation.resources
 4. Set the name of the APKs in the BaseClass file
-5. Either open two emulators from Android studio or connect two mobile devices
+5. Either, open two emulators from Android studio or connect two mobile devices
 6. Run `adb devices` on the terminal and fetch its UDID, and add it in the BaseClass file
 7. Now can run the project by right click on the testng.xml file -> Run As -> click on 1 TestNG Suite
 8. Then the project will get start, and run in the TestNG (testing framework) from Appium framework
