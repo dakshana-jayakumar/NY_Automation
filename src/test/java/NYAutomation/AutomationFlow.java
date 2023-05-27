@@ -14,7 +14,6 @@ import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
 
-import java.util.Arrays;
 import java.util.Scanner;
 
 import java.io.File;
@@ -50,7 +49,7 @@ public class AutomationFlow extends BaseClass implements ITestListener{
     	// Get user input to determine which data to use
     	int dataOption;
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter data option (1 for Regression Testing, 2 for Sanity Testing, 3 for Both Tesing):");
+        System.out.println("Enter data option (1 for Regression Testing, (any number other than 1) for Sanity Testing):");
         dataOption = scanner.nextInt();
         scanner.close();
 
@@ -58,11 +57,6 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         if (dataOption == 1) {
             data = regressionData;
             System.out.println("Performing Regression Testing");
-        }
-        else if (dataOption == 3) {
-            System.out.println("Performing Both Testing");
-	        data = Arrays.copyOf(sanityData, sanityData.length + regressionData.length);
-	        System.arraycopy(regressionData, 0, data, sanityData.length, regressionData.length);
         }
         else {
             data = sanityData;
@@ -117,17 +111,23 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         }
         
         /* if any specific cases has to be performed */
-        if ((screen == "Choose Language") && (screen != "Update Language")) {
-        	scrollToText ("Tamil");
-        	
+        if ("Choose Language".equals(screen) && !"Update Language".equals(screen)) {
+            scrollToText("Tamil");
+        
         }
         
         if ((screen == "Stats Dashboard") || (screen == "Logout Section")) {
-        	Thread.sleep(5000);
+            Thread.sleep(5000);
             // Add handling of Android back key here
             user.pressKey(new KeyEvent(AndroidKey.BACK));
             return;
         }
+         if (screen == "Stats Dashboards") {
+         	Thread.sleep(5000);
+             // Add handling of Android back key here
+             driver.pressKey(new KeyEvent(AndroidKey.BACK));
+             return;
+         }
 
         /* Button layout locator */
         By buttonLayoutLocator = By.xpath(xpath);
@@ -157,7 +157,7 @@ public class AutomationFlow extends BaseClass implements ITestListener{
     public void scrollToText(String text) {
 
 		driver.findElement(new AppiumBy.ByAndroidUIAutomator("new UiScrollable(new UiSelector().scrollable(true).instance(0))"
-				+ ".scrollIntoView(new UiSelector()" + ".textMatches(\"" +text+ "\").instance(0))"));
+				+ ".scrollIntoView(new UiSelector()" + ".textMatches(\"" + text + "\").instance(0))"));
 	}
           
         
@@ -191,9 +191,6 @@ public class AutomationFlow extends BaseClass implements ITestListener{
     }
 
     public void saveScreenshot(File srcFile, String destFilePath) {
-        // Create destination directory if it doesn't exist
-        File destDir = new File(destFilePath).getParentFile();
-
         // Replace the existing screenshot file with the latest one
         try {
             Files.copy(srcFile.toPath(), new File(destFilePath).toPath(), StandardCopyOption.REPLACE_EXISTING);

@@ -21,7 +21,7 @@ public class Utilities {
 			{"DriverLogin", "Choose Language", "Tamil", "//android.widget.TextView[@text='Tamil']", "", "driver"},
 			{"DriverLogin", "Choose Language", "English", "//android.widget.TextView[contains(@text,'English')]", "", "driver"},
 			{"DriverLogin", "Choose Language", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
-			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter mobile number']", "9999999920", "driver"},
+			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter Mobile Number']", "9999999920", "driver"},
 			{"DriverLogin", "Mobile Number", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
 			{"DriverLogin", "Otp", "OTP", "//android.widget.EditText[@text='Auto Reading OTP...']", "7891", "driver"},
 			{"DriverLogin", "Permission", "Location Access", "//android.widget.TextView[@text='Location Access']", "", "driver"},
@@ -102,6 +102,65 @@ public class Utilities {
             /* Logout */
             {"HamburgerFlow", "Logout", "Logout", "//android.widget.TextView[@text='Logout']", "", "user"},
             {"HamburgerFlow", "Logout Section", "Back Press", "", "", "user"},
+            /* Driver Hamburger */
+            {"DriverHamburger", "Home", "Navbar Home", "//android.widget.TextView[@text='Home']/../../android.widget.LinearLayout[1]", "", "driver"},
+            /* Add alternate number*/
+            {"Add Alternate Number", "Home", "Add Alternate Number", "//android.widget.TextView[@text='Add Alternate Number']/../../android.widget.LinearLayout", "", "driver"},
+            {"Add Alternate Number", "Personal Details", "Alternate Number Popup", "//android.widget.TextView[@text='Enter Alternate Mobile Number']/../../android.widget.LinearLayout/android.widget.ImageView", "", "driver"},
+            {"Add Alternate Number", "Personal Details", "Back Icon", "//android.widget.TextView[@text='Personal Details']/../../android.widget.LinearLayout/android.widget.ImageView", "", "driver"},
+            /* Driver status */
+            {"Driver status", "Home", "Offline", "//android.widget.TextView[@text='Offline']", "", "driver"},
+            {"Driver status", "Home", "Offline Popup", "//android.widget.TextView[@text='Go Offline']", "", "driver"},
+            {"Driver status", "Home", "Offline to Online", "//android.widget.TextView[@text='GO!']", "", "driver"},
+            {"Driver status", "Home", "Silent", "//android.widget.TextView[@text='Silent']", "", "driver"},
+            {"Driver status", "Home", "Silent to Online", "//android.widget.TextView[@text='Online']/../../android.widget.LinearLayout", "", "driver"},
+            /* Driver Profile */
+            {"DriverProfile", "Home", "Profile Icon", "//android.widget.TextView[@text='Offline']/../../../../android.widget.LinearLayout[1]", "", "driver"},
+            {"DriverProfile", "Driver Profile", "Personal Details", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[1]", "", "driver"},
+            {"DriverProfile", "Personal Details", "Back Icon", "//android.widget.TextView[@text='Personal Details']/../../android.widget.LinearLayout/android.widget.ImageView", "", "driver"},
+            /* Vehicle Details */
+            {"DriverProfile", "Driver Profile", "Vehicle Details", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[2]", "", "driver"},
+            {"DriverProfile", "Vehicle Details", "Back Icon", "//android.widget.TextView[@text='Vehicle Details']/../../android.widget.LinearLayout/android.widget.ImageView", "", "driver"},
+            /* App Info */
+            {"DriverProfile", "Driver Profile", "App Info", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[3]", "", "driver"},
+            {"DriverProfile", "Vehicle Details", "Back Icon", "//android.widget.TextView[@text='App info']/../../android.view.ViewGroup/android.widget.ImageButton", "", "driver"},
+            /* Languages */
+            {"DriverProfile", "Driver Profile", "Languages", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[4]", "", "driver"},
+            {"DriverProfile", "Languages", "Back Icon", "//android.widget.TextView[@text='Select Language']/../../android.widget.LinearLayout/android.widget.ImageView", "", "driver"},
+            /* Help and FAQs */
+            {"DriverProfile", "Driver Profile", "Help and FAQs", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[5]", "", "driver"},
+            {"DriverProfile", "Help and Support", "Lost and Found", "//android.widget.TextView[@text='Lost And Found']/../../android.widget.LinearLayout[1]", "", "driver"},
+            {"DriverProfile", "Lost and Found", "Back Icon", "//android.widget.TextView[@text='Lost And Found']/../../android.widget.LinearLayout[1]/android.widget.ImageView", "", "driver"},
+            
+            {"DriverProfile", "Help and Support", "Ride Related", "//android.widget.TextView[@text='Lost And Found']/../../android.widget.LinearLayout[2]", "", "driver"},
+            {"DriverProfile", "Ride Related", "Back Icon", "//android.widget.TextView[@text='Ride Related']/../../android.widget.LinearLayout[1]/android.widget.ImageView", "", "driver"},
+            
+            {"DriverProfile", "Help and Support", "App Related", "//android.widget.TextView[@text='App Related']/../../android.widget.LinearLayout[1]", "", "driver"},
+            {"DriverProfile", "Help and FAQs", "Back Icon", "//android.widget.TextView[@text='App Related Issue']/../../android.widget.LinearLayout[1]/android.widget.ImageView", "", "driver"},
+            
+            {"DriverProfile", "Help and Support", "Fare Related", "//android.widget.TextView[@text='App Related']/../../android.widget.LinearLayout[2]", "", "driver"},
+            {"DriverProfile", "Help and FAQs", "Back Icon", "//android.widget.TextView[@text='Fare Related Issue']/../../android.widget.LinearLayout[1]/android.widget.ImageView", "", "driver"},
+            
+            {"DriverProfile", "Help and Support", "Back Icon", "//android.widget.TextView[@text='HELP_AND_SUPPORT']/../../android.widget.LinearLayout[1]/android.widget.ImageView", "", "driver"},
+            /* Live Stats Dashboard */
+            {"DriverProfile", "Driver Profile", "Live Stats Dashboard", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[6]", "", "driver"},
+            {"DriverProfile", "Stats Dashboards", "Back Press", "", "", "driver"},
+            /* About */
+            {"DriverProfile", "Driver Profile", "About", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[7]", "", "driver"},
+            {"DriverProfile", "About", "Back Icon", "//android.widget.TextView[@text='About']/../../android.widget.LinearLayout[1]/android.widget.ImageView", "", "driver"},
+            /* Logout */
+            {"DriverProfile", "Driver Profile", "Logout", "//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[8]", "", "driver"},
+            {"DriverProfile", "Driver Logout", "Go Back", "//android.widget.TextView[@text='Go Back']", "", "driver"},
+            /* Trips */
+            {"DriverHamburger", "Driver Profile", "Navbar Trips", "//android.widget.TextView[@text='Home']/../../android.widget.LinearLayout[2]", "", "driver"},
+            {"DriverHamburger", "Trips", "Cancelled", "//android.widget.TextView[@text='Cancelled']", "", "driver"},
+            {"DriverHamburger", "Trips", "Completed", "//android.widget.TextView[@text='Completed']", "", "driver"},
+            /* Contest */
+            {"DriverHamburger", "Trips", "Navbar Contest", "//android.widget.TextView[@text='Home']/../../android.widget.LinearLayout[3]", "", "driver"},
+            /* Alerts */
+            {"DriverHamburger", "Contest", "Navbar Alerts", "//android.widget.TextView[@text='Home']/../../android.widget.LinearLayout[4]", "", "driver"},
+            {"DriverHamburger", "Alerts", "Back Icon", "//android.widget.TextView[@text='All Alerts']/../../android.widget.LinearLayout/android.widget.ImageView", "", "driver"},
+            {"DriverHamburger", "Referral", "Navbar Home", "//android.widget.TextView[@text='Home']/../../android.widget.LinearLayout[1]", "", "driver"},
 
 	};
 	
@@ -119,7 +178,7 @@ public class Utilities {
 			{"DriverLogin", "Choose Language", "Tamil", "//android.widget.TextView[@text='Tamil']", "", "driver"},
 			{"DriverLogin", "Choose Language", "English", "//android.widget.TextView[contains(@text,'English')]", "", "driver"},
 			{"DriverLogin", "Choose Language", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
-			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter mobile number']", "9999999920", "driver"},
+			{"DriverLogin", "Mobile Number", "Enter Mobile Number", "//android.widget.EditText[@text='Enter Mobile Number']", "9999999920", "driver"},
 			{"DriverLogin", "Mobile Number", "Next", "//android.widget.TextView[@text='Next']", "", "driver"},
 			{"DriverLogin", "Otp", "OTP", "//android.widget.EditText[@text='Auto Reading OTP...']", "7891", "driver"},
 			{"DriverLogin", "Permission", "Location Access", "//android.widget.TextView[@text='Location Access']", "", "driver"},
