@@ -1,35 +1,36 @@
 package NYAutomation;
 
-import java.time.Duration;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.openqa.selenium.support.ui.Wait;
-import org.testng.annotations.Test;
 
 import base.BaseClass;
-import io.appium.java_client.AppiumBy;
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.nativekey.AndroidKey;
-import io.appium.java_client.android.nativekey.KeyEvent;
-
-import java.util.Scanner;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 
+import io.appium.java_client.AppiumBy;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.android.nativekey.AndroidKey;
+import io.appium.java_client.android.nativekey.KeyEvent;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.security.GeneralSecurityException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.Duration;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import org.openqa.selenium.TakesScreenshot;
+
+import org.testng.annotations.Test;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Listeners;
 import org.testng.ITestListener;
@@ -45,25 +46,11 @@ public class AutomationFlow extends BaseClass implements ITestListener{
 
     @Test
     /* Creating a method for overall flow of the applications */
-    private void flow() throws InterruptedException {
-    	// Get user input to determine which data to use
-    	int dataOption;
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter data option (1 for Regression Testing, (any number other than 1) for Sanity Testing):");
-        dataOption = scanner.nextInt();
-        scanner.close();
-
-        String[][] data;
-        if (dataOption == 1) {
-            data = regressionData;
-            System.out.println("Performing Regression Testing");
-        }
-        else {
-            data = sanityData;
-            System.out.println("Performing Sanity Testing");
-        }
- 
-        for (String[] actionParameter : data) {
+    private void flow() throws InterruptedException, IOException, GeneralSecurityException {
+        // Fetch test data from Google Sheet
+    	TestDataReader.fetchTabNames();
+        String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
+        for (String[] actionParameter : testData) {
             String testCase = actionParameter[0];
             String screen = actionParameter[1];
             String state = actionParameter[2];
@@ -75,11 +62,8 @@ public class AutomationFlow extends BaseClass implements ITestListener{
             test = extentReports.createTest(screen, state);
 
             checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
-          
-            System.out.println("XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
+            System.out.println("screen: " + screen + " | state: " + screen + "XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
         }
-
-        System.out.println("User Successfully Logged In");
     }
 
     /* method used to code all the types of functions to be handled */
@@ -110,24 +94,20 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         	return;
         }
         
-        /* if any specific cases has to be performed */
+         /* if any specific cases have to be performed */
         if ("Choose Language".equals(screen) && !"Update Language".equals(screen)) {
-            scrollToText("Tamil");
+        //             Wait for the element to be visible before scrolling
+        //            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
         
+                    // Scroll to the desired text
+                    scrollToText("Tamil");
         }
-        
-        if ((screen == "Stats Dashboard") || (screen == "Logout Section")) {
+        if (("Stats Dashboard".equals(screen)) || ("Logout Section".equals(screen))) {
             Thread.sleep(5000);
             // Add handling of Android back key here
-            user.pressKey(new KeyEvent(AndroidKey.BACK));
+            (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.BACK));
             return;
         }
-         if (screen == "Stats Dashboards") {
-         	Thread.sleep(5000);
-             // Add handling of Android back key here
-             driver.pressKey(new KeyEvent(AndroidKey.BACK));
-             return;
-         }
 
         /* Button layout locator */
         By buttonLayoutLocator = By.xpath(xpath);
