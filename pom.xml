@@ -48,6 +48,33 @@
 	    <artifactId>selenium-java</artifactId>
 	    <version>4.9.0</version>
 	</dependency>
+      <!-- Google Sheets API -->
+    <dependency>
+        <groupId>com.google.api-client</groupId>
+        <artifactId>google-api-client</artifactId>
+        <version>1.31.1</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.oauth-client</groupId>
+        <artifactId>google-oauth-client-jetty</artifactId>
+        <version>1.31.1</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-sheets -->
+    <dependency>
+        <groupId>com.google.apis</groupId>
+        <artifactId>google-api-services-sheets</artifactId>
+        <version>v4-rev614-1.18.0-rc</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.http-client</groupId>
+        <artifactId>google-http-client</artifactId>
+        <version>1.41.1</version>
+    </dependency>
+    <dependency>
+      <groupId>NammaYatri</groupId>
+      <artifactId>NYAutomation</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>
