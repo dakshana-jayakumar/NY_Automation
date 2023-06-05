@@ -70,11 +70,6 @@
         <artifactId>google-http-client</artifactId>
         <version>1.41.1</version>
     </dependency>
-    <dependency>
-      <groupId>NammaYatri</groupId>
-      <artifactId>NYAutomation</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-    </dependency>
   </dependencies>
 
   <build>

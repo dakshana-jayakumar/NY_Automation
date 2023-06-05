@@ -1,13 +1,13 @@
 package NYAutomation;
 
 
-
 import base.BaseClass;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
+import com.aventstack.extentreports.MediaEntityBuilder;
 
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
@@ -50,6 +50,10 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         // Fetch test data from Google Sheet
     	TestDataReader.fetchTabNames();
         String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
+        
+        boolean userFlag = true;
+        boolean driverFlag = true;
+
         for (String[] actionParameter : testData) {
             String testCase = actionParameter[0];
             String screen = actionParameter[1];
@@ -58,11 +62,20 @@ public class AutomationFlow extends BaseClass implements ITestListener{
             String sendKeysValue = actionParameter[4];
             boolean isUser = "user".equals(actionParameter[5]);
   
+            if(userFlag && isUser) {
+            	userFlag = false;
+            	setup(isUser);
+            }
+            else if(driverFlag && !isUser) {
+            	driverFlag = false;
+            	setup(isUser);
+            }
+
          /* Create a new test in the report */
             test = extentReports.createTest(screen, state);
 
             checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
-            System.out.println("screen: " + screen + " | state: " + screen + "XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
+            System.out.println("screen: " + screen + " | state: " + screen + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
         }
     }
 
@@ -70,7 +83,7 @@ public class AutomationFlow extends BaseClass implements ITestListener{
     public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws InterruptedException {
         /* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(50)) /* Set the timeout duration to 50 seconds */
+                .withTimeout(Duration.ofSeconds(30)) /* Set the timeout duration to 30 seconds */
                 .pollingEvery(Duration.ofMillis(1000)) /* Set the polling interval to 1000 milliseconds */
                 .ignoring(Exception.class); /* Ignore exceptions during the wait */
 
@@ -96,8 +109,8 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         
          /* if any specific cases have to be performed */
         if ("Choose Language".equals(screen) && !"Update Language".equals(screen)) {
-        //             Wait for the element to be visible before scrolling
-        //            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
+                //     Wait for the element to be visible before scrolling
+                //    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath)));
         
                     // Scroll to the desired text
                     scrollToText("Tamil");
@@ -141,33 +154,42 @@ public class AutomationFlow extends BaseClass implements ITestListener{
 	}
           
         
-        /* Captures a screenshot and replaces the existing screenshot with the latest one */
+    /* Captures a screenshot and replaces the existing screenshot with the latest one */
     private String getScreenshotPathForUser(String testCase) {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HH");
         String timestamp = now.format(formatter);
 
-        File userSrcFile = ((TakesScreenshot) user).getScreenshotAs(OutputType.FILE);
-        String userDestFilePath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
-                + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "screenshots"
-                + File.separator + testCase + "_user_" + timestamp + ".png";
-        saveScreenshot(userSrcFile, userDestFilePath);
+        if (user != null) {
+	        File userSrcFile = ((TakesScreenshot) user).getScreenshotAs(OutputType.FILE);
+            String userDestFilePath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "screenshots"
+                    + File.separator + testCase + "_user_" + timestamp + ".png";
+            saveScreenshot(userSrcFile, userDestFilePath);
+            return userDestFilePath;
+        	} else {
+	        	System.out.println("User is not initialized!");
+	            return null;
+	        }
+        }
 
-        return userDestFilePath;
-    }
-
-    private String getScreenshotPathForDriver(String testCase) {
+    public String getScreenshotPathForDriver(String testCase) {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HH");
         String timestamp = now.format(formatter);
 
-        File driverSrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-        String driverDestFilePath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
-                + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "screenshots"
-                + File.separator + testCase + "_driver_" + timestamp + ".png";
-        saveScreenshot(driverSrcFile, driverDestFilePath);
+        if (driver != null) {
+            File driverSrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            String driverDestFilePath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "screenshots"
+                    + File.separator + testCase + "_driver_" + timestamp + ".png";
+            saveScreenshot(driverSrcFile, driverDestFilePath);
 
-        return driverDestFilePath;
+            return driverDestFilePath;
+        } else {
+            System.out.println("Driver is not initialized!");
+            return null;
+        }
     }
 
     public void saveScreenshot(File srcFile, String destFilePath) {
@@ -182,31 +204,38 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         
     /* Setup ExtentReports */
     public ExtentReports setupReport() {
-    	String path = System.getProperty("user.dir") + File.separator + File.separator + "src" + File.separator + "main"
-                + File.separator + "java" + File.separator + "NYAutomation" + File.separator+ "Reports" + File.separator +  "report_" + System.currentTimeMillis() + ".html";
-		
-		ExtentSparkReporter reporter = new ExtentSparkReporter(path);
-		reporter.config().setReportName("Namma Yatri Test Report");
-		reporter.config().setDocumentTitle("Test Results");
-		
-		extentReports = new ExtentReports();
-		extentReports.attachReporter(reporter);
-		return extentReports;
-    }
-        
-    @Override
-	public void onTestSuccess(ITestResult result) {
+        String path = System.getProperty("user.dir") + File.separator + File.separator + "src" + File.separator + "main"
+                + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "Reports" + File.separator + "report_" + System.currentTimeMillis() + ".html";
 
-		test.log(Status.PASS, "Test Passed");
-	}
+        ExtentSparkReporter reporter = new ExtentSparkReporter(path);
+        reporter.config().setReportName("Namma Yatri Test Report");
+        reporter.config().setDocumentTitle("Test Results");
+
+        extentReports = new ExtentReports();
+        extentReports.attachReporter(reporter);
+        return extentReports;
+    }
+    
+    @Override
+  public void onTestSuccess(ITestResult result) {
+          test.log(Status.PASS, "Test Passed");
+      }
     
     @Override
     public void onTestFailure(ITestResult result) {
         test.fail(result.getThrowable());
 
-        test.addScreenCaptureFromPath(getScreenshotPathForUser(result.getMethod().getMethodName()));
+        String userScreenshotPath = getScreenshotPathForUser(result.getMethod().getMethodName());
+        String driverScreenshotPath = getScreenshotPathForDriver(result.getMethod().getMethodName());
+        
+        if (userScreenshotPath != null && !userScreenshotPath.isEmpty()) {
+            test.info("User Screenshot:", MediaEntityBuilder.createScreenCaptureFromPath(userScreenshotPath).build());
+        } 
+        
 
-        test.addScreenCaptureFromPath(getScreenshotPathForDriver(result.getMethod().getMethodName()));
+        if (driverScreenshotPath != null && !driverScreenshotPath.isEmpty()) {
+            test.info("Driver Screenshot:", MediaEntityBuilder.createScreenCaptureFromPath(driverScreenshotPath).build());
+        }
     }
 
     /* Tear down ExtentReports */

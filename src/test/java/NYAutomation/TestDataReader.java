@@ -88,7 +88,7 @@ public class TestDataReader {
             }
             // System.out.println("-----------Array Values--------------");
             // // Print the fetched data
-            // for (String[] rowData : data) {
+            // for (String[] rowData : testData) {
             //     // Process each row of data
             //     System.out.println(String.join(", ", rowData));
             // }
