@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import io.appium.java_client.android.AndroidDriver;
@@ -43,4 +44,12 @@ public class BaseClass {
 		return driver;
 
     }
+    
+    public static WebDriver getDriver() {
+        return driver;
+    }
+    public static WebDriver getUser() {
+        return user;
+    }
+    
 }
