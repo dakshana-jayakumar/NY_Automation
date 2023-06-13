@@ -1,5 +1,13 @@
 package NYAutomation;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -7,49 +15,77 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public class TestDataReader {
     private static final String APPLICATION_NAME = "NYAutomation";
     private static final String SPREADSHEET_ID = "1jsnDPbPfXiTCylcD1mJ-mqs7WDJhOrb3nJ-SjD1jS1I";
     public static final String SERVICE_ACCOUNT_KEY_PATH = "src/main/java/NYAutomation/resources/credentials.json";
     public static List<String[]> testData = new ArrayList<>();
+    public static List<String[]> mobileNumbersList = new ArrayList<>();
     
     /*  To run only this file then enable main method */
-    //  public static void main(String[] args) {
-    //      fetchTabNames();
-    //  }
+//     public static void main(String[] args) throws IOException, GeneralSecurityException {
+//         fetchTabNames();
+//         fetchMobileNumbers();
+//     }
+        public static List<String[]> fetchMobileNumbers() throws GeneralSecurityException {
+            try {
+                GoogleCredential credential = getServiceAccountCredential();
+                credential.refreshToken();
 
-    /**
-     * Fetches the names of the tabs (worksheets) in the spreadsheet and fetches data from each tab.
+                // Build the Sheets service
+                Sheets sheetsService = buildSheetsService(credential);
+                String range = "MobileNumbers";
+                ValueRange response = getSheetValues(sheetsService, range);
+                List<List<Object>> values = response.getValues();
+                if (values.isEmpty()) {
+                    System.out.println("No mobile numbers found");
+                } else {
+                    for (List<Object> row : values) {
+                        String[] rowData = new String[row.size()];
+                        for (int i = 0; i < row.size(); i++) {
+                            rowData[i] = row.get(i).toString();
+                        }
+                        mobileNumbersList.add(rowData);
+                    }
+                }
+            } catch (IOException e) {
+                // Handle exceptions
+            }
+            // System.out.println("-----------Array Values--------------");
+            //     // Print the fetched data
+            //     for (String[] rowData : mobileNumbersList) {
+            //         // Process each row of data
+            //         System.out.println(Arrays.toString(rowData));
+            //     }
+
+            return mobileNumbersList;
+        }
+
+	/**
+     * Fetches the names of the tabs (worksheets) in the spreadsheet and fetches data from each tab. 
+	 * @throws GeneralSecurityException 
      */
-    public static void fetchTabNames() {
+    public static void fetchTabNames() throws GeneralSecurityException {
         try {
             GoogleCredential credential = getServiceAccountCredential();
             credential.refreshToken();
 
             // Build the Sheets service
             Sheets sheetsService = buildSheetsService(credential);
-            String range = "TestCases!A1:A";
+            String range = "JaiTestCase";
             ValueRange response = getSheetValues(sheetsService, range);
-
-            List<List<Object>> values = response.getValues();
-            if (values != null) {
-                for (List<Object> row : values) {
-                    for (Object cell : row) {
-                        String sheetName = cell.toString();
-                        fetchTestData(sheetName, sheetsService);
-                    }
-                }
-            } else {
-                System.out.println("No tabs found in this sheet");
-            }
-        } catch (IOException | GeneralSecurityException e) {
+	            List<List<Object>> values = response.getValues();
+	            if (values != null) {
+	                for (List<Object> row : values) {
+	                    for (Object cell : row) {
+	                        String sheetName = cell.toString();
+	                        fetchTestData(sheetName, sheetsService);
+	                    }
+	                }
+	            } else {
+	                System.out.println("No tabs found in this sheet");
+	            }
+        } catch (IOException e) {
             // Handle exceptions
         }
     }
@@ -63,7 +99,7 @@ public class TestDataReader {
      */
     public static void fetchTestData(String testType, Sheets sheetsService) {
         try {
-            String range = testType + "!A1:Z1001";
+            String range = testType; // + "!A1:Z1001";
             ValueRange response = getSheetValues(sheetsService, range);
             List<List<Object>> values = response.getValues();
             if (values.isEmpty()) {
@@ -86,12 +122,12 @@ public class TestDataReader {
                     }
                 }
             }
-            // System.out.println("-----------Array Values--------------");
-            // // Print the fetched data
-            // for (String[] rowData : testData) {
-            //     // Process each row of data
-            //     System.out.println(String.join(", ", rowData));
-            // }
+            System.out.println("-----------Array Values--------------");
+            // Print the fetched data
+            for (String[] rowData : testData) {
+                // Process each row of data
+                System.out.println(String.join(", ", rowData));
+            }
         } catch (IOException e) {
             // Handle exceptions
         }

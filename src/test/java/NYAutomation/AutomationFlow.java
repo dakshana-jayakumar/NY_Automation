@@ -5,9 +5,9 @@ import base.BaseClass;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
-import com.aventstack.extentreports.MediaEntityBuilder;
 
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
@@ -19,22 +19,27 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
-import org.openqa.selenium.TakesScreenshot;
-
-import org.testng.annotations.Test;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.Listeners;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.Listeners;
+import org.testng.annotations.Test;
+
+import static base.ADBDeviceFetcher.androidVersions;
+import static base.ADBDeviceFetcher.brandNames;
+import static base.ADBDeviceFetcher.fetchAdbDeviceProperties;
 
 
 @Listeners(NYAutomation.AutomationFlow.class)
@@ -43,6 +48,7 @@ public class AutomationFlow extends BaseClass implements ITestListener{
     private String RideOtp = "";
     private static ExtentTest test; // Updated variable declaration
     ExtentReports extentReports = setupReport();
+    private String[] mobileNumber;
 
     @Test
     /* Creating a method for overall flow of the applications */
@@ -50,32 +56,37 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         // Fetch test data from Google Sheet
     	TestDataReader.fetchTabNames();
         String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
-        
-        boolean userFlag = true;
-        boolean driverFlag = true;
+        List<String[]> mobileNumbers = TestDataReader.fetchMobileNumbers();
+        int mobileNumbersCount = mobileNumbers.size();
+        /* To Fetch Adb Device Properties */
+        fetchAdbDeviceProperties();
+        for (int i = 1; i < mobileNumbersCount; i++) {
+            mobileNumber = mobileNumbers.get(i);
+            System.out.println("Mobile Number: " + Arrays.toString(mobileNumber));
+            boolean userFlag = true;
+            boolean driverFlag = true;
+            for (String[] actionParameter : testData) {
+                String testCase = actionParameter[0];
+                String screen = actionParameter[1];
+                String state = actionParameter[2];
+                String xpath = actionParameter[3];
+                String sendKeysValue = actionParameter[4];
+                boolean isUser = "user".equals(actionParameter[5]);
+                if(userFlag && isUser) {
+                    userFlag = false;
+                    setup(isUser);
+                }
+                else if(driverFlag && !isUser) {
+                    driverFlag = false;
+                    setup(isUser);
+                }
 
-        for (String[] actionParameter : testData) {
-            String testCase = actionParameter[0];
-            String screen = actionParameter[1];
-            String state = actionParameter[2];
-            String xpath = actionParameter[3];
-            String sendKeysValue = actionParameter[4];
-            boolean isUser = "user".equals(actionParameter[5]);
-  
-            if(userFlag && isUser) {
-            	userFlag = false;
-            	setup(isUser);
+            /* Create a new test in the report */
+                test = extentReports.createTest(screen, state);
+
+                System.out.println("screen: " + screen + " | state: " + screen + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
+                checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
             }
-            else if(driverFlag && !isUser) {
-            	driverFlag = false;
-            	setup(isUser);
-            }
-
-         /* Create a new test in the report */
-            test = extentReports.createTest(screen, state);
-
-            checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
-            System.out.println("screen: " + screen + " | state: " + screen + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
         }
     }
 
@@ -121,6 +132,40 @@ public class AutomationFlow extends BaseClass implements ITestListener{
             (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.BACK));
             return;
         }
+        if ("Enter Mobile Number".equals(state) && isUser) {
+            // If the state is "Enter Mobile Number" and the user is a user
+            // Set sendKeysValue to the first value in the mobileNumber array
+            sendKeysValue = Arrays.toString(mobileNumber);
+            sendKeysValue = sendKeysValue.substring(1, sendKeysValue.length() - 1).split(",")[0].trim();
+        } else if ("Enter Mobile Number".equals(state) && !isUser) {
+            // If the state is "Enter Mobile Number" and the user is not a user
+            // Set sendKeysValue to the second value in the mobileNumber array
+            sendKeysValue = Arrays.toString(mobileNumber);
+            sendKeysValue = sendKeysValue.substring(1, sendKeysValue.length() - 1);
+            String[] sendKeysArray = sendKeysValue.split(", ");
+            String secondNumber = "";
+            if (sendKeysArray.length > 1) {
+                secondNumber = sendKeysArray[1].trim();
+            }
+            sendKeysValue = secondNumber;
+        } else if ("Location Permission".equals(state)) {
+            // If the state is "Location Permission"
+            // Call the checkLocationPermission method to modify the xpath value
+            xpath = checkLocationPermission(xpath);
+        } else if ("Select Namma Yatri Partner".equals(state) && checkOverlayPermission()) {
+            // If the state is "Select Namma Yatri Partner" and checkOverlayPermission is true
+            // Return from the current method or function
+            return;
+        } else if ("Allow Battery Optimization".equals(state)) {
+            // If the state is "Allow Battery Optimization"
+            // Call the checkBatteryPermission method to modify the xpath value
+            xpath = checkBatteryPermission(xpath);
+        } else if ("AutoStart Screen Back Icon".equals(state) && checkAutoStartPermission()) {
+            // If the state is "AutoStart Screen Back Icon" and checkAutoStartPermission is true
+            // Return from the current method or function
+            return;
+        }
+        
 
         /* Button layout locator */
         By buttonLayoutLocator = By.xpath(xpath);
@@ -238,10 +283,43 @@ public class AutomationFlow extends BaseClass implements ITestListener{
         }
     }
 
+    private String checkLocationPermission(String modifiedXpath) {
+        // Check if any of the first two connected devices has Android version < 10
+        if ((Integer.parseInt(androidVersions.get(0)) < 10) || (Integer.parseInt(androidVersions.get(1)) < 10)) {
+            modifiedXpath = modifiedXpath + "2]"; // Append "2]" to xpath
+        } else {
+            modifiedXpath = modifiedXpath + "1]"; // Append "1]" to xpath
+        }
+        System.out.println("Modified Xpath: " + modifiedXpath);
+        return modifiedXpath;
+    }
+    
+    private String checkBatteryPermission(String modifiedXpath) {
+        // Check if the brand name at index 1 is "google" or "Android"
+        if ("google".equals(brandNames.get(1)) || ("Android".equals(brandNames.get(1)))) {
+            modifiedXpath = modifiedXpath + "2]"; // Append "2]" to xpath
+        }
+        return modifiedXpath;
+    }
+    
+    private boolean checkOverlayPermission() {
+        int androidVersion = Integer.parseInt(androidVersions.get(1));
+        // Check if the Android version of the second connected device is greater than 10
+        if (androidVersion > 10) {
+            scrollToText("Namma Yatri Partner");
+            return false;
+        }
+        return true;
+    }
+    
+    private boolean checkAutoStartPermission() {
+        // Check if the brand name at index 1 is "google" or "Android"
+        return (brandNames.get(1).equals("google") || brandNames.get(1).equals("Android"));
+    }
+
     /* Tear down ExtentReports */
     @AfterSuite
     public void tearDownReport() {
     	extentReports.flush();
     }
-    
 }
