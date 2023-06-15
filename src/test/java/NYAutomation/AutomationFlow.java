@@ -1,6 +1,8 @@
 package NYAutomation;
 
 
+import java.io.ByteArrayInputStream;
+
 import base.BaseClass;
 
 
@@ -12,6 +14,14 @@ import io.appium.java_client.android.nativekey.KeyEvent;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Attachment;
 import io.qameta.allure.Step;
+
+import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.OutputType;
@@ -28,12 +38,11 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
-import java.io.ByteArrayInputStream;
+import base.ADBDeviceFetcher;
+import static base.ADBDeviceFetcher.androidVersions;
+import static base.ADBDeviceFetcher.brandNames;
+import static base.ADBDeviceFetcher.fetchAdbDeviceProperties;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.Duration;
 
 @Listeners(NYAutomation.AutomationFlow.class)
 public class AutomationFlow extends BaseClass implements ITestListener {
@@ -42,9 +51,10 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
     @Test
     /* Creating a method for overall flow of the applications */
-    public void flow() throws InterruptedException, IOException {
+    public void flow() throws InterruptedException, IOException, GeneralSecurityException {
     	/* Fetch test data from Google Sheet */
         TestDataReader.fetchTabNames();
+        ADBDeviceFetcher.fetchAdbDeviceProperties();
         String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
 
         boolean userFlag = true;
@@ -66,8 +76,8 @@ public class AutomationFlow extends BaseClass implements ITestListener {
                 setup(isUser);
             }
 
-            checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
             System.out.println("screen: " + screen + " | state: " + screen + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
+            checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
         }
     }
 
@@ -107,7 +117,24 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             Thread.sleep(5000);
             (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.BACK));
             return;
+        } else if ("Location Permission".equals(state)) {
+            /* If the state is "Location Permission" */
+            /* Call the checkLocationPermission method to modify the xpath value */
+            xpath = checkLocationPermission(xpath, isUser);
+        } else if ("Select Namma Yatri Partner".equals(state) && checkOverlayPermission()) {
+            /* If the state is "Select Namma Yatri Partner" and checkOverlayPermission is true */
+            /* Return from the current method or function */
+            return;
+        } else if ("Allow Battery Optimization".equals(state)) {
+            /* If the state is "Allow Battery Optimization" */
+            /* Call the checkBatteryPermission method to modify the xpath value */
+            xpath = checkBatteryPermission(xpath);
+        } else if ("AutoStart Screen Back Icon".equals(state) && checkAutoStartPermission()) {
+            /* If the state is "AutoStart Screen Back Icon" and checkAutoStartPermission is true */
+            /* Return from the current method or function */
+            return;
         }
+        
 
         /* Button layout locator */
         By buttonLayoutLocator = By.xpath(xpath);
@@ -226,6 +253,38 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     @Attachment(value = "{0}", type = "image/png")
     public byte[] attachScreenshot(String attachmentName, String screenshotPath) throws IOException {
         return Files.readAllBytes(Paths.get(screenshotPath));
+    }
+
+    private String checkLocationPermission(String modifiedXpath, boolean isUser) {
+        /* Check if any of the first two connected devices has Android version < 10 */
+        if(isUser){
+            return (Integer.parseInt(androidVersions.get(0)) < 10) ? modifiedXpath + "2]" : modifiedXpath + "1]";
+        }else{
+            return (Integer.parseInt(androidVersions.get(1)) < 10) ? modifiedXpath + "2]" : modifiedXpath + "1]";
+        }
+    }
+    
+    private String checkBatteryPermission(String modifiedXpath) {
+        /* Check if the brand name at index 1 is "google" or "Android" */
+        if ("google".equals(brandNames.get(1)) || ("Android".equals(brandNames.get(1)))) {
+            modifiedXpath += "2]"; /* Append "2]" to xpath */
+        }
+        return modifiedXpath;
+    }
+    
+    private boolean checkOverlayPermission() {
+        int androidVersion = Integer.parseInt(androidVersions.get(1));
+        /* Check if the Android version of the second connected device is greater than 10 */
+        if (androidVersion > 10) {
+            scrollToText("Namma Yatri Partner");
+            return false;
+        }
+        return true;
+    }
+    
+    private boolean checkAutoStartPermission() {
+        /* Check if the brand name at index 1 is "google" or "Android" */
+        return (brandNames.get(1).equals("google") || brandNames.get(1).equals("Android"));
     }
 
     /* Method is executed after the test suite finishes and quits the WebDriver instances for both user and driver */

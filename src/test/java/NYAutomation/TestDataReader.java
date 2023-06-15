@@ -1,18 +1,19 @@
 package NYAutomation;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class TestDataReader {
     private static final String APPLICATION_NAME = "NYAutomation";
@@ -27,8 +28,9 @@ public class TestDataReader {
 
     /**
      * Fetches the names of the tabs (worksheets) in the spreadsheet and fetches data from each tab.
+     * @throws java.security.GeneralSecurityException
      */
-    public static void fetchTabNames() {
+    public static void fetchTabNames() throws GeneralSecurityException {
         try {
             GoogleCredential credential = getServiceAccountCredential();
             credential.refreshToken();
