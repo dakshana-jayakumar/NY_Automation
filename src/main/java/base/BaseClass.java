@@ -14,20 +14,20 @@ public class BaseClass {
 
     public static String rideOTP = "";
     public static AndroidDriver user, driver;
+    public static void setup(boolean isUser) throws MalformedURLException {
 
-    public void setup(boolean isUser) throws MalformedURLException {
         DesiredCapabilities userCapabilities = new DesiredCapabilities();
         DesiredCapabilities driverCapabilities = new DesiredCapabilities();
         
         if(isUser) {
-        	user = setupAndroidDriver("emulator-5554", "nammaYatri-prod-debug-29-may-2023.apk", userCapabilities);
+        	user = setupAndroidDriver(ADBDeviceFetcher.devices.get(0), "user-apk-name.apk", userCapabilities);
         }
         else {
-        	driver = setupAndroidDriver("emulator-5556", "nammaYatriPartner-prod-debug-29-may-2023.apk", driverCapabilities);
+	       	driver = setupAndroidDriver(ADBDeviceFetcher.devices.get(1), "driver-apk-name.apk", driverCapabilities);
         }
     }
 
-    private AndroidDriver setupAndroidDriver(String udid, String appFile, DesiredCapabilities capabilities) throws MalformedURLException {
+    private static AndroidDriver setupAndroidDriver(String udid, String appFile, DesiredCapabilities capabilities) throws MalformedURLException {
         String appPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
                 + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources"
                 + File.separator;
@@ -39,7 +39,7 @@ public class BaseClass {
         capabilities.setCapability("fullReset", true);
         capabilities.setCapability("app", appFilePath);
 
-        AndroidDriver driver = new AndroidDriver(new URL("http://0.0.0.0:4724"), capabilities);
+        AndroidDriver driver = new AndroidDriver(new URL("http://0.0.0.0:4725"), capabilities);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 		return driver;
 
