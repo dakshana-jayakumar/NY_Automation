@@ -57,6 +57,10 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
     Map<String, String> screenStatusMap = new HashMap<>();
 
+	private String UserMobileNumber = "7777777777";
+	private String DriverMobileNumber = "9999999915";
+
+
     @Test
     @Epic("Allure Results")
     @Feature("TestNG support")
@@ -107,6 +111,15 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     	Wait<AndroidDriver> wait = waitTime(isUser);
 
 
+    	 if ("Enter Mobile Number".equals(state)) {
+         	/* Alter the mobile numbers by individual testers according to their use cases */
+         	if (isUser) {
+         		sendKeysValue = UserMobileNumber;
+         		}
+         	else {
+         		sendKeysValue = DriverMobileNumber;
+         		}
+         }
         
     	if ("Location Permission".equals(state)) {
             /* If the state is "Location Permission" */
@@ -131,10 +144,8 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         }
         
         
-        
          /* Function calls for both Customer and Driver */   
         {
-            
             /* Function call to perform android back button */
             androidBack(screen, state, isUser);
             
