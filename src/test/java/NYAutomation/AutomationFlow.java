@@ -32,6 +32,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.remote.RemoteWebElement;
+import org.testng.Assert;
 import org.testng.ITestListener;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Listeners;
@@ -53,12 +54,12 @@ import io.qameta.allure.Story;
 @Listeners(NYAutomation.AutomationFlow.class)
 public class AutomationFlow extends BaseClass implements ITestListener {
 
-    private String RideOtp = "";
+    private String rideOtp = "";
 
     Map<String, String> screenStatusMap = new HashMap<>();
 
-	private String UserMobileNumber = "7777777777";
-	private String DriverMobileNumber = "9999999915";
+	private String userMobileNumber = "7777777777";
+	private String driverMobileNumber = "9999999920";
 
 
     @Test
@@ -111,15 +112,15 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     	Wait<AndroidDriver> wait = waitTime(isUser);
 
 
-    	 if ("Enter Mobile Number".equals(state)) {
-         	/* Alter the mobile numbers by individual testers according to their use cases */
-         	if (isUser) {
-         		sendKeysValue = UserMobileNumber;
+    	if ("Enter Mobile Number".equals(state)) {
+        	/* Alter the mobile numbers by individual testers according to their use cases */
+    		if (isUser) {
+         		sendKeysValue = userMobileNumber;
          		}
          	else {
-         		sendKeysValue = DriverMobileNumber;
+         		sendKeysValue = driverMobileNumber;
          		}
-         }
+        }
         
     	if ("Location Permission".equals(state)) {
             /* If the state is "Location Permission" */
@@ -142,15 +143,86 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             /* Return from the current method or function */
             return;
         }
+        else if ("Back Press".equals(state)) {
+            Thread.sleep(5000);
+            (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.BACK));
+            return;
+        }
+
+
+        else if ("Scroll Function".equals(state)) {
+        	boolean canScrollMore = (Boolean)user.executeScript("mobile: scrollGesture", ImmutableMap.of(
+    				"left", 100, "top", 100, "width", 1200, "height", 1200,
+    				"direction", "down",
+    				"percent", 3.0
+    				));
+        	Thread.sleep(3000);
+        	return;
+        }
+        else if ("Favourite update toast".equals(state)) {
+        	String ToastMessage = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
+    		Assert.assertEquals(ToastMessage, "Favourite Updated Successfully");
+    		System.out.println(ToastMessage);
+    		return;
+        }
+        else if ("Location exists toast".equals(state)) {
+        	String ToastMessage1 = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
+
+    		Assert.assertEquals(ToastMessage1, "location already exists");
+    		System.out.println("Validated Toast:"+ ToastMessage1);
+    		return;
+        }
+        else if ("Home location toast".equals(state)) {
+        	String ToastMessage2 = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
+    		Assert.assertEquals(ToastMessage2, "Home location already exists");
+    		System.out.println("Validated Toast:"+ ToastMessage2);
+    		Thread.sleep(3000);
+    		return;
+        }
+        else if ("Work location toast".equals(state)) {
+        	String ToastMessage3 = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
+    		Assert.assertEquals(ToastMessage3, "Work location already exists");
+    		System.out.println("Validated Toast:"+ ToastMessage3);
+    		Thread.sleep(3000);
+    		return;
+        }
+        else if ("Error msg".equals(state)) {
+        	By buttonLayoutLocator = By.xpath(xpath);
+        	String PopUp = user.findElement(buttonLayoutLocator).getText();
+    		System.out.println("Error message : " + PopUp);
+    		return;
+        }
+        else if ("Clear text".equals(state)) {
+        	By buttonLayoutLocator = By.xpath(xpath);
+        	user.findElement(buttonLayoutLocator).clear();
+        	return;
+        }
+        else if ("Favourite added toast".equals(state)) {
+        	String ToastMessage4 = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
+    		Assert.assertEquals(ToastMessage4, "Favourite Added Successfully");
+    		System.out.println("Validated Toast:"+ ToastMessage4);
+    		System.out.println("-----------------FAVOURITE TESTCASES DONE-------------------------------");
+    		return;
+        } 	
+    	
+    	else if("Booking Preference".equals(state)){
+            By buttonLayoutLocator = By.xpath("//android.widget.RelativeLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.TextView[1]");
+            String KmString = user.findElement(buttonLayoutLocator).getText();
+            String Kms = KmString.replace(" km", "");
+            float KmsInFloat = Float.parseFloat(Kms);
+            System.out.println("Kms value :: " + Kms);
+            System.out.println("Kms value in FLoat:: " + KmsInFloat);
+            if(KmsInFloat > 5){
+                return;
+            }
+        }
         
         
          /* Function calls for both Customer and Driver */   
         {
-            /* Function call to perform android back button */
-            androidBack(screen, state, isUser);
             
         	/* Function call for ride otp fetch from user and enter in driver */
-            rideOTP(state, xpath, wait);
+        	rideStartOTP(state, xpath, wait);
 
 	        /* Function call to validate the mobile number and otp is entered correct */
 	        validateMobileNumberAndOtp(state, sendKeysValue, screen, driver);
@@ -205,16 +277,8 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         /* Scrolls to the specified text */
     		driver.findElement(new AppiumBy.ByAndroidUIAutomator("new UiScrollable(new UiSelector().scrollable(true).instance(0))"
     				+ ".scrollIntoView(new UiSelector()" + ".textMatches(\"" + text + "\").instance(0))"));
-    	}
-    
-    public void androidBack(String screen, String state, Boolean isUser) throws InterruptedException {
-    	/* To perform android back action */
-    	if (("Stats Dashboard".equals(screen)) || ("Logout Section".equals(screen)) || ("Minimise Keyboard").equals(state)) {
-            Thread.sleep(5000);
-            (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.BACK));
-            return;
-        }
     }
+    
 
 	public String checkLocationPermission(String modifiedXpath, boolean isUser) {
 	    /* Check if any of the first two connected devices has Android version < 10 */
@@ -256,9 +320,9 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
             String mobileNumberError = null;
             if (mobileNumber.length() != 10) {
-                mobileNumberError = "Invalid mobile number: Length should be 10";
+                mobileNumberError = "Invalid mobile number : Length should be 10";
             } else if (mobileNumber.charAt(0) < '6') {
-                mobileNumberError = "Invalid mobile number: First digit should be greater than or equal to 6";
+                mobileNumberError = "Invalid mobile number : First digit should be greater than or equal to 6";
             }
 
             if (mobileNumberError != null) {
@@ -274,9 +338,9 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
             String otpError = null;
             if (otp.length() != 4) {
-                otpError = "Wrong OTP: Length should be 4";
+                otpError = "Wrong OTP : Length should be 4";
             } else if (!otp.equals("7891")) {
-                otpError = "Wrong OTP: Enter the correct otp";
+                otpError = "Wrong OTP : Enter the correct otp";
             }
 
             if (otpError != null) {
@@ -284,17 +348,17 @@ public class AutomationFlow extends BaseClass implements ITestListener {
                 logErrorToAllureReport(otpError, driver, user, screenStatusMap);
             }
         }
-    } 
+    }
     
-    public void rideOTP(String state, String xpath, Wait<AndroidDriver> wait) {
+    public void rideStartOTP(String state, String xpath, Wait<AndroidDriver> wait) {
     	if (state.equals("Fetch Otp")) {
         	/* Fetching OTP digits */
             for (int readOtp = 1; readOtp <= 4; readOtp++) {
-                RideOtp = RideOtp + wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath + "/../android.widget.LinearLayout/android.widget.LinearLayout[" + readOtp + "]/android.widget.TextView"))).getText();
+            	rideOtp = rideOtp + wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath + "/../android.widget.LinearLayout/android.widget.LinearLayout[" + readOtp + "]/android.widget.TextView"))).getText();
             }
-            System.out.println("Ride Otp = " + RideOtp);
+            System.out.println("Ride Otp = " + rideOtp);
 
-            char[] otp = RideOtp.toCharArray();
+            char[] otp = rideOtp.toCharArray();
             /* Entering OTP digits */
             for (int enterOtp = 0; enterOtp < 4; enterOtp++) {
                 char digit = otp[enterOtp];
@@ -302,7 +366,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
                 String xpath2 = "//android.widget.TextView[@text='Please ask the customer for the OTP']/../../../android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView[@text='" + digit + "']";
                 driver.findElement(AppiumBy.xpath(xpath2)).click();
             }
-            System.out.println("Ride Otp = " + RideOtp);
+            System.out.println("Ride Otp = " + rideOtp);
             
             return;
         }
@@ -317,7 +381,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     
     public void cancelRide(String state, String xpath) {
     	/* Function for pulling the startride popup till cancel ride, to cancel to ride */
-        if ("Draging bottom layout".equals(state)) {
+    	if ("Draging bottom layout".equals(state)) {
         	/* Screen should be drag up and "Cancel Ride" button should be visible */
             By buttonLayoutLocator = By.xpath(xpath);
             WebElement source = user.findElement(buttonLayoutLocator);
