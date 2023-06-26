@@ -108,8 +108,11 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
     /* method used to code all the types of functions to be handled */
     public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws InterruptedException, IOException {
-    	/* Variable to store wait */
-    	Wait<AndroidDriver> wait = waitTime(isUser);
+    	/* Creating a wait object to wait for the user or driver */
+        Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
+                .withTimeout(Duration.ofSeconds(20))
+                .pollingEvery(Duration.ofMillis(1000))
+                .ignoring(Exception.class);
 
 
     	if ("Enter Mobile Number".equals(state)) {
@@ -246,14 +249,6 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     }
 
 
-    public Wait<AndroidDriver> waitTime(boolean isUser) {
-    	/* Creating a wait object to wait for the user or driver */
-        Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(20))
-                .pollingEvery(Duration.ofMillis(1000))
-                .ignoring(Exception.class);
-		return wait;
-    }
 
     /**
     * Performs the action based on the provided parameters.
