@@ -8,7 +8,9 @@ import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
-
+import io.appium.java_client.touch.WaitOptions;
+import io.appium.java_client.touch.offset.PointOption;
+import io.appium.java_client.TouchAction;
 import io.qameta.allure.Allure;
 import io.qameta.allure.model.Status;
 
@@ -23,6 +25,7 @@ import java.util.HashMap;
 import java.util.TreeMap;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -92,7 +95,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
                 driverFlag = false;
                 setup(isUser);
             }
-
+            System.out.println("screen: " + screen + " | state: " + state + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
             try {
             	checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
             	screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Passed");
@@ -108,11 +111,8 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
     /* method used to code all the types of functions to be handled */
     public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws InterruptedException, IOException {
-    	/* Creating a wait object to wait for the user or driver */
-        Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(20))
-                .pollingEvery(Duration.ofMillis(1000))
-                .ignoring(Exception.class);
+    	/* Variable to store wait */
+    	Wait<AndroidDriver> wait = waitTime(isUser);
 
 
     	if ("Enter Mobile Number".equals(state)) {
@@ -151,8 +151,6 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.BACK));
             return;
         }
-
-
         else if ("Scroll Function".equals(state)) {
         	boolean canScrollMore = (Boolean)user.executeScript("mobile: scrollGesture", ImmutableMap.of(
     				"left", 100, "top", 100, "width", 1200, "height", 1200,
@@ -161,6 +159,102 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     				));
         	Thread.sleep(3000);
         	return;
+        }
+        else if (("Fetch Otp").equals(state)) {
+        	/* Fetching OTP digits */
+            for (int i = 1; i <= 4; i++) {
+                rideOtp = rideOtp + wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath + "/../android.widget.LinearLayout/android.widget.LinearLayout[" + i + "]/android.widget.TextView"))).getText();
+            }
+            System.out.println("Ride Otp = " + rideOtp);
+
+            char[] otp = rideOtp.toCharArray();
+            /* Entering OTP digits */
+            for (int i = 0; i < 4; i++) {
+                char digit = otp[i];
+                System.out.println("Otp Digit = " + digit);
+                String xpath2 = "//android.widget.TextView[@text='Please ask the customer for the OTP']/../../../android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView[@text='" + digit + "']";
+                driver.findElement(AppiumBy.xpath(xpath2)).click();
+            }
+            System.out.println("Ride Otp = " + rideOtp);
+
+            Thread.sleep(2000);
+            return;
+        }
+        else if ("Google Map".equals(state)) {
+    	    	int loopCount = 2; // Number of times to loop
+
+    	    	for (int i = 0; i < loopCount; i++) {
+    	        Thread.sleep(2000);
+    	        /* Simulate the App Switcher (Recent Apps) key */
+    	        KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.APP_SWITCH);
+    	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
+    	    }
+    	    return;
+    	}
+        else if ("Home Press".equals(state)) {
+            Thread.sleep(2000);
+            (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.HOME));
+            return;
+        }
+        else if ("SwipeFromUp".equals(state)) {
+            Thread.sleep(2000);
+            System.out.println("check");
+            By buttonLayoutLocator = By.xpath(xpath);
+            WebElement element = user.findElement(buttonLayoutLocator);
+
+            /* Get the size of the element */
+            Dimension size = element.getSize();
+            int startX = size.width / 2;
+            int startY = size.height / 2;
+
+            /* Calculate the end coordinates for pulling down the notifications */
+            int endX = startX;
+            int endY = (int) (startY + size.height * 0.4);
+
+            /* Perform the swipe gesture to pull down the notifications */
+            TouchAction<?> touchAction = new TouchAction<>(user);
+            touchAction.press(PointOption.point(startX, startY))
+                    .waitAction(WaitOptions.waitOptions(Duration.ofMillis(1000)))
+                    .moveTo(PointOption.point(endX, endY))
+                    .release()
+                    .perform();
+
+            /* Perform a click action on the element */
+            By invoiceLocator = By.xpath("//android.widget.TextView[@text='Invoice Downloaded']");
+            WebElement invoiceElement = user.findElement(invoiceLocator);
+            invoiceElement.click();
+            Thread.sleep(5000);
+            return;
+        }
+        else if ("Swipe".equals(state)) {
+        	int loopCount = 2;
+        	for (int i = 0; i < loopCount; i++) {
+        	By buttonLayoutLocator = By.xpath(xpath);
+            WebElement element = user.findElement(buttonLayoutLocator);
+        	/* Perform the swipe gesture */
+            (isUser ? user : driver).executeScript("mobile: swipeGesture", ImmutableMap.of(
+                    "elementId", ((RemoteWebElement) element).getId(),
+                    "direction", "left",
+                    "percent", 0.75
+            ));
+        	}
+            return;
+        }
+        else if ("Invoice Check".equals(state)) {
+            String expected = "View Invoice";
+
+            By buttonLayoutLocator = By.xpath(xpath);
+            WebElement element = user.findElement(buttonLayoutLocator);
+            String result = element.getText();
+            System.out.println("Check :: " + result);
+            
+            try {
+                Assert.assertEquals(result, expected, "Blocker!!! Invoice is found when the ride is canceled");
+                System.out.println("Invoice found: " + expected);
+            } catch (AssertionError e) {
+                System.out.println("Invoice not found when the ride is canceled");
+                return;
+            }
         }
         else if ("Favourite update toast".equals(state)) {
         	String ToastMessage = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
@@ -209,12 +303,12 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         } 	
     	
     	else if("Booking Preference".equals(state)){
-            By buttonLayoutLocator = By.xpath("//android.widget.RelativeLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.TextView[1]");
+            By buttonLayoutLocator = By.xpath("//android.widget.RelativeLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView[1]");
             String KmString = user.findElement(buttonLayoutLocator).getText();
             String Kms = KmString.replace(" km", "");
             float KmsInFloat = Float.parseFloat(Kms);
             System.out.println("Kms value :: " + Kms);
-            System.out.println("Kms value in FLoat:: " + KmsInFloat);
+            System.out.println("Kms value in Float:: " + KmsInFloat);
             if(KmsInFloat > 5){
                 return;
             }
@@ -223,10 +317,6 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         
          /* Function calls for both Customer and Driver */   
         {
-            
-        	/* Function call for ride otp fetch from user and enter in driver */
-        	rideStartOTP(state, xpath, wait);
-
 	        /* Function call to validate the mobile number and otp is entered correct */
 	        validateMobileNumberAndOtp(state, sendKeysValue, screen, driver);
 	        
@@ -249,6 +339,14 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     }
 
 
+    public Wait<AndroidDriver> waitTime(boolean isUser) {
+    	/* Creating a wait object to wait for the user or driver */
+        Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
+                .withTimeout(Duration.ofSeconds(30))
+                .pollingEvery(Duration.ofMillis(1000))
+                .ignoring(Exception.class);
+		return wait;
+    }
 
     /**
     * Performs the action based on the provided parameters.
@@ -345,28 +443,6 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         }
     }
     
-    public void rideStartOTP(String state, String xpath, Wait<AndroidDriver> wait) {
-    	if (state.equals("Fetch Otp")) {
-        	/* Fetching OTP digits */
-            for (int readOtp = 1; readOtp <= 4; readOtp++) {
-            	rideOtp = rideOtp + wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath + "/../android.widget.LinearLayout/android.widget.LinearLayout[" + readOtp + "]/android.widget.TextView"))).getText();
-            }
-            System.out.println("Ride Otp = " + rideOtp);
-
-            char[] otp = rideOtp.toCharArray();
-            /* Entering OTP digits */
-            for (int enterOtp = 0; enterOtp < 4; enterOtp++) {
-                char digit = otp[enterOtp];
-                System.out.println("Otp Digit = " + digit);
-                String xpath2 = "//android.widget.TextView[@text='Please ask the customer for the OTP']/../../../android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView[@text='" + digit + "']";
-                driver.findElement(AppiumBy.xpath(xpath2)).click();
-            }
-            System.out.println("Ride Otp = " + rideOtp);
-            
-            return;
-        }
-    }
-    
     public void languageScroll(String screen) {
     	/* if any specific cases have to be performed */
         if ("Choose Language".equals(screen) && !"Update Language".equals(screen)) {
@@ -388,7 +464,6 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             return;
         }
     }
-    
     
     /* When the build is failed 
      * Attaching UI errors, API errors, screenshots, logs and the screen wise status */
