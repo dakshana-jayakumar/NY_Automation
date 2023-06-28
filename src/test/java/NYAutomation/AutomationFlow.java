@@ -16,12 +16,11 @@ import io.qameta.allure.model.Status;
 
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
-
-import java.security.GeneralSecurityException;
 import java.time.Duration;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
 import java.util.TreeMap;
 
 import org.openqa.selenium.By;
@@ -61,7 +60,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
     Map<String, String> screenStatusMap = new HashMap<>();
 
-	private String userMobileNumber = "7777777777";
+	private String userMobileNumber = "7777777713";
 	private String driverMobileNumber = "9999999920";
 
 
@@ -70,7 +69,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     @Feature("TestNG support")
     @Story("Application flow")
     /* Creating a method for overall flow of the applications */
-    public void flow() throws InterruptedException, IOException, GeneralSecurityException {
+    public void flow() throws Exception {
     	/* Fetch test data from Google Sheet */
         TestDataReader.fetchTabNames();
         ADBDeviceFetcher.fetchAdbDeviceProperties();
@@ -110,7 +109,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     }
 
     /* method used to code all the types of functions to be handled */
-    public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws InterruptedException, IOException {
+    public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws Exception {
     	/* Variable to store wait */
     	Wait<AndroidDriver> wait = waitTime(isUser);
 
@@ -302,17 +301,177 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     		return;
         } 	
     	
-    	else if("Booking Preference".equals(state)){
-            By buttonLayoutLocator = By.xpath("//android.widget.RelativeLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView[1]");
-            String KmString = user.findElement(buttonLayoutLocator).getText();
-            String Kms = KmString.replace(" km", "");
-            float KmsInFloat = Float.parseFloat(Kms);
-            System.out.println("Kms value :: " + Kms);
-            System.out.println("Kms value in Float:: " + KmsInFloat);
-            if(KmsInFloat > 5){
-                return;
-            }
-        }
+    	else if ("PickUpLocation".equals(state)) {
+            /* Test cases to handle 36 search location combinations */
+    	    int i, j = 0;
+    	    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Pick Up Location']")).click();
+    	    for (i = 1; i <= 6; i++) {
+    	    	System.out.print("i value : " + i);
+    	        user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../preceding-sibling::android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout[1]")).click();
+    	        switch (i) {
+    	            case 1:
+    	                user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']")).click();
+    	                System.out.println("Case_1_Home_Executed");
+    	                break;
+    	            case 2:
+    	                user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Work']")).click();
+    	                System.out.println("Case_2_Work_Executed");
+    	                break;
+    	            case 3:
+    	                user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='All Favourites']")).click();
+    	                List<WebElement> favList = user.findElements(AppiumBy.xpath("//android.widget.TextView[@text='Select Favourite']/../../android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView"));
+    	                System.out.println("Favlist Size is _" + favList.size());
+    	                for (int n = 0; n < favList.size(); n++) {
+    	                    if (n == 2) {
+    	                        favList.get(n).click();
+    	                    }
+    	                }
+    	                System.out.println("Case_3_All_Favourites_Executed");
+    	                break;
+    	            case 4:
+    	                user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Set location on map']")).click();
+    	                boolean canScrollMore = (Boolean) user.executeScript("mobile: scrollGesture", ImmutableMap.of(
+    	                        "left", 100, "top", 100, "width", 900, "height", 900,
+    	                        "direction", "down",
+    	                        "percent", 3.0
+    	                ));
+    	                if (i == 4 && j == 4) {
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Drop Location']")).click();
+
+    	                } else if (i == 4) {
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Pickup Location']")).click();
+
+    	                } else if (j == 4) {
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Drop Location']")).click();
+    	                }
+    	                System.out.println("Case_4_SetOnMap_Executed");
+    	                break;
+    	            case 5:
+    	                if (i == 5 && j != 5) {
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../preceding-sibling::android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout")).click();
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.M));
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.J));
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.E));
+    	                } else {
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../preceding-sibling::android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout[3]/android.widget.LinearLayout")).click();
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.U));
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.L));
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.S));
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
+    	                }
+    	                ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
+    	                user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout")).click();
+    	                System.out.println("Case_5_GoogleAutoSuggestions_Executed");
+    	                break;
+
+    	            case 6:
+    	                List<WebElement> recentlist = user.findElements(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../android.widget.ScrollView/android.widget.LinearLayout/descendant::android.widget.LinearLayout/android.widget.TextView[1]"));
+    	                for (int p = 0; p < recentlist.size(); p++) {
+    	                    String result = recentlist.get(p).getText();
+    	                }
+    	                int lastIndex = recentlist.size() - 1;
+    	                recentlist.get(lastIndex).click();
+    	                user.pressKey(new KeyEvent(AndroidKey.BACK));
+	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../../android.widget.LinearLayout[1]")).click();
+    	                System.out.println("Case_6_RecentSearches_Executed");
+    	                break;
+    	        }
+
+    	        System.out.println("For 'i', source test cases " + i + " executed");
+
+                /*  */
+    	        for (j = 1; j <= 6; j++) {
+    	            switch (j) {
+    	                case 1:
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']")).click();
+    	                    Thread.sleep(2000);
+    	    	            user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	                    System.out.println("Case_1_Home_Executed");
+    	                    break;
+    	                case 2:
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Work']")).click();
+    	                    Thread.sleep(2000);
+    	    	            user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	                    System.out.println("Case_2_Work_Executed");
+    	                    break;
+    	                case 3:
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='All Favourites']")).click();
+    	                    List<WebElement> favList = user.findElements(AppiumBy.xpath("//android.widget.TextView[@text='Select Favourite']/../../android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView"));
+    	                    System.out.println("Favlist Size is _" + favList.size());
+    	                    for (int n = 0; n < favList.size(); n++) {
+    	                        if (n == 2) {
+    	                            favList.get(n).click();
+    	                        }
+    	                    }
+    	                    Thread.sleep(2000);
+    	    	            user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	                    System.out.println("Case_3_All_Favourites_Executed");
+    	                    break;
+    	                case 4:
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Set location on map']")).click();
+    	                    boolean canScrollMore = (Boolean) user.executeScript("mobile: scrollGesture", ImmutableMap.of(
+    	                            "left", 100, "top", 100, "width", 900, "height", 900,
+    	                            "direction", "down",
+    	                            "percent", 3.0
+    	                    ));
+    	                    if (i == 4 && j == 4) {
+    	                        user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Drop Location']")).click();
+    	                    } else if (i == 4) {
+    	                        user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Pickup Location']")).click();
+
+    	                    } else if (j == 4) {
+    	                        user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Drop Location']")).click();
+    	                    }
+    	                    Thread.sleep(2000);
+    	    	            user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	                    System.out.println("Case_4_SetOnMap_Executed");
+    	                    break;
+    	                case 5:
+    	                    if (i == 5 && j != 5) {
+        	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../preceding-sibling::android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout")).click();
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.M));
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.J));
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.E));
+    	                    } else {
+        	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../preceding-sibling::android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout[3]/android.widget.LinearLayout")).click();
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.U));
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.L));
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.S));
+    	                        ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
+    	                    }
+    	                    ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout")).click();
+
+    	                    Thread.sleep(2000);
+    	    	            user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	                    System.out.println("Case_5_GoogleAutoSuggestions_Executed");
+    	                    break;
+
+    	                case 6:
+    	                    List<WebElement> recentlist = user.findElements(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../android.widget.ScrollView/android.widget.LinearLayout/descendant::android.widget.LinearLayout/android.widget.TextView[1]"));
+    	                    for (int p = 0; p < recentlist.size(); p++) {
+    	                        String result = recentlist.get(p).getText();
+    	                    }
+    	                    int lastIndex = recentlist.size() - 1;
+    	                    recentlist.get(lastIndex).click();
+    	                    Thread.sleep(2000);
+    	                    user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']/../../../../../../../android.widget.LinearLayout[1]")).click();
+    	                    System.out.println("Case_6_RecentSearches_Executed");
+    	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Pick Up Location']")).click();
+    	                    break;
+    	            }
+    	            System.out.println("For 'j', destination test cases " + j + " executed");
+    	        }
+    	    }
+
+    	    System.out.println("36 Search Location Combination Executed Successfully");
+    	    user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	    user.pressKey(new KeyEvent(AndroidKey.BACK));
+    	    return;
+    	}
         
         
          /* Function calls for both Customer and Driver */   
@@ -342,7 +501,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     public Wait<AndroidDriver> waitTime(boolean isUser) {
     	/* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(30))
+                .withTimeout(Duration.ofSeconds(40))
                 .pollingEvery(Duration.ofMillis(1000))
                 .ignoring(Exception.class);
 		return wait;
