@@ -34,6 +34,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.remote.RemoteWebElement;
+import org.openqa.selenium.NoSuchElementException;
+
 import org.testng.Assert;
 import org.testng.ITestListener;
 import org.testng.annotations.AfterSuite;
@@ -60,7 +62,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
     Map<String, String> screenStatusMap = new HashMap<>();
 
-	private String userMobileNumber = "7777777713";
+	private String userMobileNumber = "7777777714";
 	private String driverMobileNumber = "9999999920";
 
 
@@ -473,6 +475,84 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     	    return;
     	}
         
+    	else if ("Driver Validation".equals(state)) {
+            /* Driver status mode validation test case */
+    		try {
+    			if (driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='GO!']")).isDisplayed()) {
+    				System.out.println("Driver is in offline mode");
+    				driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='GO!']")).click();
+    			}
+    		} catch (NoSuchElementException e) {
+
+    			try {
+    				if (driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Silent']/../android.widget.ImageView")).isDisplayed()) {
+    					System.out.println("Driver is in Silent mode");
+    					driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Online']")).click();
+    				}
+    			} catch (NoSuchElementException e1) {
+    				System.out.println("Driver is in Online mode");
+    			}
+    		}
+    		return;
+    	}
+    	
+    	else if ("Alternate number validation".equals(state)) {
+            /* Driver alternate mobile number validation test case */
+    	    try {
+    	        if (driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Add Alternate Number']")).isDisplayed()) {
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Add Alternate Number']")).click();
+
+    	            long randomNumber = (long) (Math.random() * 900000000L) + 100000000L;
+    	            String phoneNumber1 = Long.toString(randomNumber);
+    	            String phoneNumber = "9" + phoneNumber1;
+    	            char[] mobNumber = phoneNumber.toCharArray();
+
+    	            for (int i = 0; i < 10; i++) {
+    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + mobNumber[i] + "']")).click();
+    	            }
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
+
+    	            char[] otp = { '7', '8', '9', '1' };
+    	            for (int k = 0; k < 4; k++) {
+    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + otp[k] + "']")).click();
+    	            }
+    	            driver.findElement( AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
+
+    	            String alternate = driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Mobile Number']/../android.widget.LinearLayout[1]/android.widget.TextView[1]")).getText();
+    	            System.out.println("Added Alternative number is: " + alternate);
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Edit']")).click();
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Edit Alternate Mobile Number']/../../android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.ImageView")).click();
+
+    	            long randomNumber2 = (long) (Math.random() * 900000000L) + 100000000L;
+    	            String phoneNumber2 = Long.toString(randomNumber2);
+    	            String phoneNumberSecond = "9" + phoneNumber2;
+    	            char[] mobNumberSecond = phoneNumberSecond.toCharArray();
+
+    	            /* Enter second different random phone number */
+    	            for (int i = 0; i < 10; i++) {
+    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + mobNumberSecond[i] + "']")).click();
+    	            }
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
+
+    	            for (int k = 0; k < 4; k++) {
+    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + otp[k] + "']")).click();
+    	            }
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
+    	            System.out.println("Alternative number edited");
+    	            Thread.sleep(3000);
+    	            
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Remove']")).click();
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove It']")).click();
+    	            System.out.println("Alternative number removed");
+
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Personal Details']/../android.widget.ImageView")).click();
+    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']")).click();
+    	        }
+    	    } catch (NoSuchElementException e) {
+    	        System.out.println("Alternative number already added");
+    	    }
+    	    return;
+    	}
         
          /* Function calls for both Customer and Driver */   
         {
