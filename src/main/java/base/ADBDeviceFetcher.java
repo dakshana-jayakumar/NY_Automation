@@ -12,9 +12,9 @@ public class ADBDeviceFetcher {
     public static List<String> brandNames = new ArrayList<>();
     public static List<String> modelNames = new ArrayList<>();
 
-//     public static void main(String[] args) throws IOException {
-//    	 fetchAdbDeviceProperties();
-//     }
+    // public static void main(String[] args) throws IOException {
+   	//  fetchAdbDeviceProperties();
+    // }
 
     public static void fetchAdbDeviceProperties() throws IOException {
         String adbPath = "/Users/" + System.getProperty("user.name") + "/Library/Android/sdk/platform-tools/adb";
@@ -26,20 +26,20 @@ public class ADBDeviceFetcher {
             if (!devicesLine.contains("List of devices attached")) {
                 String[] deviceInfo = devicesLine.split("\\s+");
                 String deviceName = deviceInfo[0];
-                devices.add(deviceName);
+                if(deviceName.length() > 2){devices.add(deviceName);}
             }
         }
 
         // Fetch properties for each connected device
         for (String device : devices) {
             String androidVersion = getProperty(device, "ro.build.version.release");
-            androidVersions.add(androidVersion != null ? androidVersion : "N/A");
-
+            if(androidVersion != null){androidVersions.add(androidVersion);}
+            
             String brandName = getProperty(device, "ro.product.brand");
-            brandNames.add(brandName != null ? brandName : "N/A");
-
+            if(brandName != null){brandNames.add(brandName);}
+            
             String modelName = getProperty(device, "ro.product.model");
-            modelNames.add(modelName != null ? modelName : "N/A");
+            if(modelName != null){modelNames.add(modelName);}
         }
 
         // Print connected devices and their properties
@@ -47,15 +47,15 @@ public class ADBDeviceFetcher {
         System.out.println("---------------------------------------");
         System.out.printf("%-45s | %-20s | %-30s | %-20s%n", "Device", "Brand", "Model", "Version");
         System.out.println("---------------------------------------");
-        for (int i = 0; i < (devices.size() - 1); i++) {
-            String device = i < (devices.size() - 1) ? devices.get(i) : "N/A";
+        for (int i = 0; i < (devices.size()); i++) {
+            String device = i < devices.size() ? devices.get(i) : "N/A";
             String brand = i < brandNames.size() ? brandNames.get(i) : "N/A";
             String model = i < modelNames.size() ? modelNames.get(i) : "N/A";
             String version = i < androidVersions.size() ? androidVersions.get(i) : "N/A";
             System.out.printf("%-45s | %-20s | %-30s | %-20s%n", device, brand, model, version);
         }
         System.out.println("---------------------------------------");
-        System.out.println("Count of devices: " + (devices.size() - 1));
+        System.out.println("Count of devices: " + devices.size());
         System.out.println("List of devices: " + devices);
     }
 
