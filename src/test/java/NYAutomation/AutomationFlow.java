@@ -4,6 +4,12 @@ package NYAutomation;
 
 import base.BaseClass;
 
+import base.ADBDeviceFetcher;
+import static base.ADBDeviceFetcher.androidVersions;
+import static base.ADBDeviceFetcher.brandNames;
+
+import com.google.common.collect.ImmutableMap;
+
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
@@ -13,14 +19,16 @@ import io.appium.java_client.touch.offset.PointOption;
 import io.appium.java_client.TouchAction;
 import io.qameta.allure.Allure;
 import io.qameta.allure.model.Status;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
-import java.io.IOException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.time.Duration;
-
-import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.openqa.selenium.By;
@@ -42,28 +50,17 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableMap;
-
-import base.ADBDeviceFetcher;
-
-import static base.ADBDeviceFetcher.androidVersions;
-import static base.ADBDeviceFetcher.brandNames;
-
-import io.qameta.allure.Epic;
-import io.qameta.allure.Feature;
-import io.qameta.allure.Story;
-
-
 
 @Listeners(NYAutomation.AutomationFlow.class)
 public class AutomationFlow extends BaseClass implements ITestListener {
 
     private String rideOtp = "";
 
-    Map<String, String> screenStatusMap = new HashMap<>();
+    static Map<String, String> screenStatusMap = new HashMap<>();
 
-	private String userMobileNumber = "7777777714";
-	private String driverMobileNumber = "9999999920";
+	private final String userMobileNumber = "7777777714";
+	private final String driverMobileNumber = "9999999920";
+    private static boolean ReportFlag = true;
 
 
     @Test
@@ -76,9 +73,9 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         TestDataReader.fetchTabNames();
         ADBDeviceFetcher.fetchAdbDeviceProperties();
         String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
-
         boolean userFlag = true;
         boolean driverFlag = true;
+        LogcatToFile.CaptureLogs();
 
         for (String[] actionParameter : testData) {
             String testCase = actionParameter[0];
@@ -102,9 +99,11 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             	screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Passed");
             }
             catch (Exception e) {
-            	screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Failed");
+                LogcatToFile.searchErrCode(isUser);
+                screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Failed");
             	logErrorToAllureReport(e.getMessage(), driver, user, screenStatusMap);
-            	throw e;
+                // Thread.sleep(3000);
+                throw e;
             }
         }
         logPassToAllureReport("Build Passed!", driver, user, screenStatusMap);
@@ -114,7 +113,6 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws Exception {
     	/* Variable to store wait */
     	Wait<AndroidDriver> wait = waitTime(isUser);
-
 
     	if ("Enter Mobile Number".equals(state)) {
         	/* Alter the mobile numbers by individual testers according to their use cases */
@@ -615,24 +613,24 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 	public String checkLocationPermission(String modifiedXpath, boolean isUser) {
 	    /* Check if any of the first two connected devices has Android version < 10 */
 	    if(isUser){
-	        return (Integer.parseInt(androidVersions.get(0)) < 10) ? modifiedXpath + "2]" : modifiedXpath + "1]";
+	        return (Integer.parseInt(androidVersions.get(UserDeviceIndex)) < 10) ? modifiedXpath + "2]" : modifiedXpath + "1]";
 	    }else{
-	        return (Integer.parseInt(androidVersions.get(1)) < 10) ? modifiedXpath + "2]" : modifiedXpath + "1]";
+	        return (Integer.parseInt(androidVersions.get(DriverDeviceIndex)) < 10) ? modifiedXpath + "2]" : modifiedXpath + "1]";
 	    }
 	}
 	
 	private String checkBatteryPermission(String modifiedXpath) {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
-	    if ("google".equals(brandNames.get(1)) || ("Android".equals(brandNames.get(1)))) {
+	    if ("google".equals(brandNames.get(DriverDeviceIndex)) || ("Android".equals(brandNames.get(DriverDeviceIndex)))) {
 	        modifiedXpath += "2]"; /* Append "2]" to xpath */
 	    }
 	    return modifiedXpath;
 	}
 	
 	private boolean checkOverlayPermission() {
-	    int androidVersion = Integer.parseInt(androidVersions.get(1));
+	    int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
 	    /* Check if the Android version of the second connected device is greater than 10 */
-	    if (androidVersion > 10) {
+	    if (androidVersion >= 10) {
 	        scrollToText("Namma Yatri Partner");
 	        return false;
 	    }
@@ -641,7 +639,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
    
 	private boolean checkAutoStartPermission() {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
-	    return (brandNames.get(1).equals("google") || brandNames.get(1).equals("Android"));
+	    return (brandNames.get(DriverDeviceIndex).equals("google") || brandNames.get(DriverDeviceIndex).equals("Android"));
 	}
     
     public void validateMobileNumberAndOtp(String state, String sendKeysValue, String screen, WebDriver driver) throws InterruptedException, IOException {
@@ -706,7 +704,11 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     
     /* When the build is failed 
      * Attaching UI errors, API errors, screenshots, logs and the screen wise status */
-    public void logErrorToAllureReport(String errorMessage, WebDriver driver, WebDriver user, Map<String, String> screenStatusMap) throws IOException {
+    public static void logErrorToAllureReport(String errorMessage, WebDriver driver, WebDriver user, Map<String, String> screenStatusMap) throws IOException {
+        ReportFlag = !ReportFlag;
+        if(ReportFlag){
+            return;
+        }
         Allure.addAttachment("Error Message", errorMessage);
         
         StringBuilder screensInfo = new StringBuilder();
@@ -754,7 +756,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         }
         /* Print or use the screensInfo StringBuilder as desired */
         System.out.println(screensInfo.toString());
-        
+        Allure.addAttachment("Screens Status", screensInfo.toString());
         if (driver != null) {
             Allure.addAttachment("Driver App Screenshot", new ByteArrayInputStream(((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES)));
         } else {
