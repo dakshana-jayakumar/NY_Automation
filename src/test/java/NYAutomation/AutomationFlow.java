@@ -25,6 +25,10 @@ import io.qameta.allure.Story;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.File;
+import java.util.Scanner;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +73,8 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     @Story("Application flow")
     /* Creating a method for overall flow of the applications */
     public void flow() throws Exception {
+    	/* Add Allure report cleanup code here */
+    	cleanupAllureReport();
     	/* Fetch test data from Google Sheet */
         TestDataReader.fetchTabNames();
         ADBDeviceFetcher.fetchAdbDeviceProperties();
@@ -109,6 +115,81 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         logPassToAllureReport("Build Passed!", driver, user, screenStatusMap);
     }
 
+    private void cleanupAllureReport() {
+        // Specify the directory path where the Allure report files are located
+        String reportDirectoryPath = System.getProperty("user.dir") + File.separator + "allure-results";
+
+        // Create a File object for the directory
+        File reportDirectory = new File(reportDirectoryPath);
+
+        // Check if the directory exists
+        if (reportDirectory.exists() && reportDirectory.isDirectory()) {
+            // Prompt the user for confirmation
+            System.out.print("Do you want to delete the files in the Allure report directory? (yes/no): ");
+
+            // Read user input
+            Scanner scanner = new Scanner(System.in);
+            String userInput = scanner.nextLine();
+
+            // Check user response
+            if (userInput.equalsIgnoreCase("yes")) {
+                // Get all files in the directory
+                File[] files = reportDirectory.listFiles();
+
+                // Iterate through each file
+                if (files != null) {
+                    for (File file : files) {
+                        // Check if the file is a regular file (not a directory)
+                        if (file.isFile()) {
+                            // Delete the file
+                            boolean deleted = file.delete();
+
+                            // Check if the file deletion was successful
+                            if (deleted) {
+                                System.out.println("Deleted file: " + file.getName());
+                            } else {
+                                System.out.println("Failed to delete file: " + file.getName());
+                            }
+                        }
+                    }
+                }
+
+                System.out.println("Allure report files have been deleted.");
+            } else {
+                System.out.println("Allure report files will not be deleted.");
+            }
+        } else {
+            System.out.println("Allure report directory does not exist or is not a directory.");
+        }
+    }
+    
+    public void runAllureServe() throws IOException {
+    	try {
+            // Replace "/opt/homebrew/bin/allure" with the actual path to the Allure command-line tool executable
+            String allurePath = "/opt/homebrew/bin/allure";
+            
+            // Specify the command to execute
+            String command = allurePath + " serve " + System.getProperty("user.dir") + File.separator + "allure-results";
+            
+            // Execute the command
+            Process process = Runtime.getRuntime().exec(command);
+            
+            // Read the output from the process if needed
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            
+            // Wait for the process to complete
+            int exitCode = process.waitFor();
+            
+            // Print the exit code
+            System.out.println("Allure serve command executed. Exit code: " + exitCode);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
     /* method used to code all the types of functions to be handled */
     public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws Exception {
     	/* Variable to store wait */
@@ -135,10 +216,32 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             /* Return from the current method or function */
             return;
         }
+    	else if ("Battery Optimization".equals(state)) {
+            int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
+            if (androidVersion == 10) {
+            	int loopCount = 2; // Number of times to loop
+    	    	for (int i = 0; i < loopCount; i++) {
+    	        Thread.sleep(2000);
+                KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.APP_SWITCH);
+    	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
+    	    	}
+            }
+        }
         else if ("Allow Battery Optimization".equals(state)) {
             /* If the state is "Allow Battery Optimization" */
             /* Call the checkBatteryPermission method to modify the xpath value */
             xpath = checkBatteryPermission(xpath);
+        }
+        else if ("AutoStart".equals(state)) {
+        	int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
+    	    if (androidVersion == 10) {
+            	int loopCount = 2; // Number of times to loop
+    	    	for (int i = 0; i < loopCount; i++) {
+    	        Thread.sleep(2000);
+                KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.APP_SWITCH);
+    	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
+    	    	}
+            }
         }
         else if ("AutoStart Screen Back Icon".equals(state) && checkAutoStartPermission()) {
             /* If the state is "AutoStart Screen Back Icon" and checkAutoStartPermission is true */
@@ -338,7 +441,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     	                if (i == 4 && j == 4) {
     	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Drop Location']")).click();
 
-    	                } else if (i == 4) {
+    	                } else if (i == 4 || i ==5 || i == 6) {
     	                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm Pickup Location']")).click();
 
     	                } else if (j == 4) {
@@ -630,7 +733,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 	private boolean checkOverlayPermission() {
 	    int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
 	    /* Check if the Android version of the second connected device is greater than 10 */
-	    if (androidVersion >= 10) {
+	    if (androidVersion > 10) {
 	        scrollToText("Namma Yatri Partner");
 	        return false;
 	    }
@@ -832,12 +935,12 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 
     /* Method is executed after the test suite finishes and quits the WebDriver instances for both user and driver */
     @AfterSuite
-    public void tearDown() {
+    public void tearDown() throws IOException {
         if (user != null) {
             user.quit();
         } else if (driver != null) {
             driver.quit();
         }
+        runAllureServe();
     }
-    
 }
