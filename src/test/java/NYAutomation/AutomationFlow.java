@@ -54,6 +54,8 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
+import static base.ADBDeviceFetcher.resolutions;
+
 
 @Listeners(NYAutomation.AutomationFlow.class)
 public class AutomationFlow extends BaseClass implements ITestListener {
@@ -167,6 +169,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     	try {
             // Replace "/opt/homebrew/bin/allure" with the actual path to the Allure command-line tool executable
             String allurePath = "/opt/homebrew/bin/allure";
+            // String allurePath = "/usr/local/bin/allure";
             
             // Specify the command to execute
             String command = allurePath + " serve " + System.getProperty("user.dir") + File.separator + "allure-results";
@@ -211,10 +214,10 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             xpath = checkLocationPermission(xpath, isUser);
         }
         
-    	if ("Select Namma Yatri Partner".equals(state) && checkOverlayPermission()) {
-            /* If the state is "Select Namma Yatri Partner" and checkOverlayPermission is true */
-            /* Return from the current method or function */
-            return;
+    	if ("Select Namma Yatri Partner".equals(state)) {
+            /* If the state is "Select Namma Yatri Partner"*/
+            /* Call the checkLocationPermission method to perform action */
+            checkOverlayPermission();
         }
     	else if ("Battery Optimization".equals(state)) {
             int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
@@ -647,17 +650,20 @@ public class AutomationFlow extends BaseClass implements ITestListener {
 	    if ("google".equals(brandNames.get(DriverDeviceIndex)) || ("Android".equals(brandNames.get(DriverDeviceIndex)))) {
 	        modifiedXpath += "2]"; /* Append "2]" to xpath */
 	    }
-	    return modifiedXpath;
+        else if("POCO".equals(brandNames.get(DriverDeviceIndex)) || "Redmi".equals(brandNames.get(DriverDeviceIndex))){
+            modifiedXpath = "//androidx.recyclerview.widget.RecyclerView/android.widget.LinearLayout[1]";
+        }
+        return modifiedXpath;
 	}
 	
-	private boolean checkOverlayPermission() {
+	private void checkOverlayPermission() {
 	    int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
+        String deviceResolution = resolutions.get(DriverDeviceIndex);
 	    /* Check if the Android version of the second connected device is greater than 10 */
-	    if (androidVersion > 10) {
-	        scrollToText("Namma Yatri Partner");
-	        return false;
-	    }
-	    return true;
+	    if ((androidVersion < 10) || ((androidVersion > 10) && ("1080x2400".equals(deviceResolution)))){
+            return;
+        }
+        scrollToText("Namma Yatri Partner");
 	}
    
 	private boolean checkAutoStartPermission() {
@@ -683,12 +689,11 @@ public class AutomationFlow extends BaseClass implements ITestListener {
                 logErrorToAllureReport(mobileNumberError, driver, user, screenStatusMap);
             }
         }
-		return;
 	}
     
     public void languageScroll(String screen) {
     	/* if any specific cases have to be performed */
-        if ("Choose Language".equals(screen) && !"Update Language".equals(screen)) {
+        if ("Choose Language".equals(screen) && !"Update Language".equals(screen) && !("1080x2400".equals(resolutions.get(DriverDeviceIndex)))) {
             scrollToText("Tamil");
         }
     }
@@ -772,7 +777,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
                 (maxScreenLength + 3) + "s%-" + (maxStateLength + 3) + "s%s%n";
 
         /* Add the table header */
-        String header = String.format(format, "APP TYPE", "TEST CASES", "SCREEN", "STATE", "STATUS");
+        String header = String.format(format, "APP TYPE", " TEST CASES", " SCREEN", " STATE", " STATUS");
         screensInfo.append(header);
 
         /* Add the table rows */
@@ -841,7 +846,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
                 (maxScreenLength + 3) + "s%-" + (maxStateLength + 3) + "s%s%n";
 
         /* Add the table header */
-        String header = String.format(format, "APP TYPE", "TEST CASES", "SCREEN", "STATE", "STATUS");
+        String header = String.format(format, "APP TYPE ", " TEST CASES ", " SCREEN ", " STATE ", " STATUS ");
         screensInfo.append(header);
 
         /* Add the table rows */

@@ -11,6 +11,7 @@ public class ADBDeviceFetcher {
     public static List<String> androidVersions = new ArrayList<>();
     public static List<String> brandNames = new ArrayList<>();
     public static List<String> modelNames = new ArrayList<>();
+    public static List<String> resolutions = new ArrayList<>();
 
     // public static void main(String[] args) throws IOException {
    	//  fetchAdbDeviceProperties();
@@ -32,27 +33,35 @@ public class ADBDeviceFetcher {
 
         // Fetch properties for each connected device
         for (String device : devices) {
-            String androidVersion = getProperty(device, "ro.build.version.release");
-            if(androidVersion != null){androidVersions.add(androidVersion);}
+            String androidVersion = getProperty(device, "getprop ro.build.version.release");
+            String firstVersion = (androidVersion.split("\\.")[0]);
+            if(androidVersion != null){androidVersions.add(firstVersion);}
             
-            String brandName = getProperty(device, "ro.product.brand");
+            String brandName = getProperty(device, "getprop ro.product.brand");
             if(brandName != null){brandNames.add(brandName);}
             
-            String modelName = getProperty(device, "ro.product.model");
+            String modelName = getProperty(device, "getprop ro.product.model");
             if(modelName != null){modelNames.add(modelName);}
+
+            String resolution = getProperty(device, "wm size");
+            if((resolution != null) && (resolution.contains("Physical size:"))) {
+                String resolution1 = resolution.replace("Physical size: ", "").trim();
+                resolutions.add(resolution1);
+            }
         }
 
         // Print connected devices and their properties
         System.out.println("Connected devices and their properties:");
         System.out.println("---------------------------------------");
-        System.out.printf("%-45s | %-20s | %-30s | %-20s%n", "Device", "Brand", "Model", "Version");
+        System.out.printf("%-40s | %-15s | %-30s | %-15s | %-15s%n", "Device", "Brand", "Model", "Version", "Resolution");
         System.out.println("---------------------------------------");
         for (int i = 0; i < (devices.size()); i++) {
             String device = i < devices.size() ? devices.get(i) : "N/A";
             String brand = i < brandNames.size() ? brandNames.get(i) : "N/A";
             String model = i < modelNames.size() ? modelNames.get(i) : "N/A";
             String version = i < androidVersions.size() ? androidVersions.get(i) : "N/A";
-            System.out.printf("%-45s | %-20s | %-30s | %-20s%n", device, brand, model, version);
+            String resolution = i < resolutions.size() ? resolutions.get(i) : "N/A";
+            System.out.printf("%-40s | %-15s | %-30s | %-15s | %-15s%n", device, brand, model, version, resolution);
         }
         System.out.println("---------------------------------------");
         System.out.println("Count of devices: " + devices.size());
@@ -62,7 +71,7 @@ public class ADBDeviceFetcher {
     // Helper method to get device property using adb shell command
     public static String getProperty(String device, String property) throws IOException {
         String adbPath = "/Users/" + System.getProperty("user.name") + "/Library/Android/sdk/platform-tools/adb";
-        Process process = Runtime.getRuntime().exec(adbPath + " -s " + device + " shell getprop " + property);
+        Process process = Runtime.getRuntime().exec(adbPath + " -s " + device + " shell " + property);
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String line = reader.readLine();
         return line;
