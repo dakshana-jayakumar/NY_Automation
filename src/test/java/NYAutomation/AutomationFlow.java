@@ -14,9 +14,6 @@ import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
-import io.appium.java_client.touch.WaitOptions;
-import io.appium.java_client.touch.offset.PointOption;
-import io.appium.java_client.TouchAction;
 import io.qameta.allure.Allure;
 import io.qameta.allure.model.Status;
 import io.qameta.allure.Epic;
@@ -36,7 +33,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -168,10 +164,10 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     public void runAllureServe() throws IOException {
     	try {
             // Replace "/opt/homebrew/bin/allure" with the actual path to the Allure command-line tool executable
-            String allurePath = "/opt/homebrew/bin/allure";
-            // String allurePath = "/usr/local/bin/allure";
-            
-            // Specify the command to execute
+            Process process1 = Runtime.getRuntime().exec("which allure");
+            BufferedReader reader1 = new BufferedReader(new InputStreamReader(process1.getInputStream()));
+            String allurePath = reader1.readLine();
+            if(allurePath == null){allurePath = "/opt/homebrew/bin/allure";}            // Specify the command to execute
             String command = allurePath + " serve " + System.getProperty("user.dir") + File.separator + "allure-results";
             
             // Execute the command
@@ -220,16 +216,13 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             boolean doAction = checkOverlayPermission();
             if(!doAction) {return;}
         }
-    	else if ("Battery Optimization".equals(state)) {
+        else if("Overlay screen Back Icon".equals(state)){
             int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
-            if (androidVersion == 10) {
-            	int loopCount = 2; // Number of times to loop
-    	    	for (int i = 0; i < loopCount; i++) {
-    	        Thread.sleep(2000);
-                KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.APP_SWITCH);
+            if ((androidVersion == 10) || (androidVersion <= 8)) {
+                KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.BACK);
     	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
-    	    	}
-            }
+                return;
+    	    }
         }
         else if ("Allow Battery Optimization".equals(state)) {
             /* If the state is "Allow Battery Optimization" */
@@ -239,12 +232,9 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         else if ("AutoStart".equals(state)) {
         	int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
     	    if (androidVersion == 10) {
-            	int loopCount = 2; // Number of times to loop
-    	    	for (int i = 0; i < loopCount; i++) {
     	        Thread.sleep(2000);
-                KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.APP_SWITCH);
+                KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.BACK);
     	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
-    	    	}
             }
         }
         else if ("AutoStart Screen Back Icon".equals(state) && checkAutoStartPermission()) {
@@ -331,9 +321,14 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         }
 
         else if ("Recenter Button".equals(state)) {
+            int androidVersion = Integer.parseInt(androidVersions.get(UserDeviceIndex));
+            if(androidVersion <= 7){
+                Thread.sleep(5000);
+                return;
+            }
         	int loopCount = 3; // Number of times to loop
 	    	for (int i = 0; i < loopCount; i++) {
-	    	user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Where to?']/../../../../../android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[2]/android.widget.ImageView")).click();
+	    		user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Where to?']/../../../../../android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[2]/android.widget.ImageView")).click();
 	    	}
         	Thread.sleep(5000);
         	return;
