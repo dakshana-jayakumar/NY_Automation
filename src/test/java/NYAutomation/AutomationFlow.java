@@ -217,7 +217,8 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     	if ("Select Namma Yatri Partner".equals(state)) {
             /* If the state is "Select Namma Yatri Partner"*/
             /* Call the checkLocationPermission method to perform action */
-            checkOverlayPermission();
+            boolean doAction = checkOverlayPermission();
+            if(!doAction) {return;}
         }
     	else if ("Battery Optimization".equals(state)) {
             int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
@@ -303,34 +304,17 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         }
         else if ("SwipeFromUp".equals(state)) {
             Thread.sleep(2000);
-            System.out.println("check");
-            By buttonLayoutLocator = By.xpath(xpath);
-            WebElement element = user.findElement(buttonLayoutLocator);
 
-            /* Get the size of the element */
-            Dimension size = element.getSize();
-            int startX = size.width / 2;
-            int startY = size.height / 2;
-
-            /* Calculate the end coordinates for pulling down the notifications */
-            int endX = startX;
-            int endY = (int) (startY + size.height * 0.4);
-
-            /* Perform the swipe gesture to pull down the notifications */
-            TouchAction<?> touchAction = new TouchAction<>(user);
-            touchAction.press(PointOption.point(startX, startY))
-                    .waitAction(WaitOptions.waitOptions(Duration.ofMillis(1000)))
-                    .moveTo(PointOption.point(endX, endY))
-                    .release()
-                    .perform();
+            /* Perform the pull down the notifications */
+            user.openNotifications();
 
             /* Perform a click action on the element */
-            By invoiceLocator = By.xpath("//android.widget.TextView[@text='Invoice Downloaded']");
-            WebElement invoiceElement = user.findElement(invoiceLocator);
-            invoiceElement.click();
+            Thread.sleep(2000);
+            user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Invoice Downloaded']")).click();
             Thread.sleep(5000);
             return;
         }
+
         else if ("Swipe".equals(state)) {
         	int loopCount = 2;
         	for (int i = 0; i < loopCount; i++) {
@@ -346,6 +330,17 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             return;
         }
 
+        else if ("Recenter Button".equals(state)) {
+        	int loopCount = 3; // Number of times to loop
+	    	for (int i = 0; i < loopCount; i++) {
+	    	user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Where to?']/../../../../../android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[2]/android.widget.ImageView")).click();
+	    	}
+        	Thread.sleep(5000);
+        	return;
+        }
+        
+        else if (("Allow Permission".equals(state)) && ("12".equals(androidVersions.get(UserDeviceIndex)))){return;}
+        
         else if ("Favourite update toast".equals(state)) {
         	String ToastMessage = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
     		Assert.assertEquals(ToastMessage, "Favourite Updated Successfully");
@@ -605,7 +600,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
     public Wait<AndroidDriver> waitTime(boolean isUser) {
     	/* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(50))
+                .withTimeout(Duration.ofSeconds(100))
                 .pollingEvery(Duration.ofMillis(1000))
                 .ignoring(Exception.class);
 		return wait;
@@ -656,14 +651,14 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         return modifiedXpath;
 	}
 	
-	private void checkOverlayPermission() {
+	private boolean checkOverlayPermission() {
 	    int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
         String deviceResolution = resolutions.get(DriverDeviceIndex);
 	    /* Check if the Android version of the second connected device is greater than 10 */
-	    if ((androidVersion < 10) || ((androidVersion > 10) && ("1080x2400".equals(deviceResolution)))){
-            return;
-        }
+	    if ((androidVersion <= 10) ){return false;}
+	    else if((androidVersion > 10) && ("1080x2400".equals(deviceResolution))) {return true;}
         scrollToText("Namma Yatri Partner");
+        return true;
 	}
    
 	private boolean checkAutoStartPermission() {
