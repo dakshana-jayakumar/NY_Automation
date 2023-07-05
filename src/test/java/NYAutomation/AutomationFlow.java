@@ -14,6 +14,10 @@ import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
+import io.appium.java_client.touch.WaitOptions;
+import io.appium.java_client.touch.offset.PointOption;
+import io.appium.java_client.TouchAction;
+
 import io.qameta.allure.Allure;
 import io.qameta.allure.model.Status;
 import io.qameta.allure.Epic;
@@ -31,8 +35,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -45,16 +52,13 @@ import org.openqa.selenium.remote.RemoteWebElement;
 import org.openqa.selenium.NoSuchElementException;
 
 import org.testng.Assert;
-import org.testng.ITestListener;
 import org.testng.annotations.AfterSuite;
-import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import static base.ADBDeviceFetcher.resolutions;
 
 
-@Listeners(NYAutomation.AutomationFlow.class)
-public class AutomationFlow extends BaseClass implements ITestListener {
+public class AutomationFlow extends BaseClass {
 
     private String rideOtp = "";
 
@@ -161,34 +165,6 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         }
     }
     
-    public void runAllureServe() throws IOException {
-    	try {
-            // Replace "/opt/homebrew/bin/allure" with the actual path to the Allure command-line tool executable
-            Process process1 = Runtime.getRuntime().exec("which allure");
-            BufferedReader reader1 = new BufferedReader(new InputStreamReader(process1.getInputStream()));
-            String allurePath = reader1.readLine();
-            if(allurePath == null){allurePath = "/opt/homebrew/bin/allure";}            // Specify the command to execute
-            String command = allurePath + " serve " + System.getProperty("user.dir") + File.separator + "allure-results";
-            
-            // Execute the command
-            Process process = Runtime.getRuntime().exec(command);
-            
-            // Read the output from the process if needed
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-            
-            // Wait for the process to complete
-            int exitCode = process.waitFor();
-            
-            // Print the exit code
-            System.out.println("Allure serve command executed. Exit code: " + exitCode);
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
     /* method used to code all the types of functions to be handled */
     public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws Exception {
     	/* Variable to store wait */
@@ -306,17 +282,28 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         }
 
         else if ("Swipe".equals(state)) {
-        	int loopCount = 2;
-        	for (int i = 0; i < loopCount; i++) {
-        	By buttonLayoutLocator = By.xpath(xpath);
-            WebElement element = user.findElement(buttonLayoutLocator);
-        	/* Perform the swipe gesture */
-            (isUser ? user : driver).executeScript("mobile: swipeGesture", ImmutableMap.of(
-                    "elementId", ((RemoteWebElement) element).getId(),
-                    "direction", "left",
-                    "percent", 0.75
-            ));
-        	}
+            int loopCount = 2;
+            for (int i = 0; i < loopCount; i++) {
+                By buttonLayoutLocator = By.xpath(xpath);
+                WebElement element = user.findElement(buttonLayoutLocator);
+
+                // Get the size of the element
+                Dimension size = element.getSize();
+                int startX = size.width / 2;
+                int startY = size.height / 2;
+
+                // Calculate the end coordinates for the swipe gesture
+                int endX = (int) (startX - size.width * 0.70);
+                int endY = startY;
+
+                // Perform the swipe gesture
+                TouchAction<?> touchAction = new TouchAction<>(user);
+                touchAction.press(PointOption.point(startX, startY))
+                        .waitAction(WaitOptions.waitOptions(Duration.ofMillis(1000)))
+                        .moveTo(PointOption.point(endX, endY))
+                        .release()
+                        .perform();
+            }
             return;
         }
 
@@ -696,7 +683,7 @@ public class AutomationFlow extends BaseClass implements ITestListener {
             ((JavascriptExecutor) user).executeScript("mobile: dragGesture", ImmutableMap.of(
                     "elementId", ((RemoteWebElement) source).getId(),
                     "endX", 447,
-                    "endY", 891
+                    "endY", 400
                     ));
     	}
         
@@ -858,6 +845,45 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         Allure.getLifecycle().updateTestCase(testResult -> testResult.setStatus(Status.PASSED));
     }
 
+    public static String runAllureServe(String allurePath, String resultsPath) {
+        String reportUrl = null;
+        String lastReportUrl = null; // Store the last parsed report URL
+        try {
+            // Specify the command to execute
+            String command = allurePath + " serve " + System.getProperty("user.dir") + File.separator + resultsPath;
+            // Execute the command
+            Process process = Runtime.getRuntime().exec(command);
+            // Read the output from the process to get the report URL
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                reportUrl = parseReportUrl(line);
+                if (reportUrl != null) {
+                    lastReportUrl = reportUrl; // Update the last known report URL
+                    System.out.println("Report URL: " + reportUrl);
+                }
+            }
+            // Wait for the process to complete
+            int exitCode = process.waitFor();
+            // Print the exit code
+            System.out.println("Allure serve command executed. Exit code: " + exitCode);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return lastReportUrl; // Return the last parsed report URL
+    }
+
+    private static String parseReportUrl(String line) {
+        String reportUrl = null;
+        Pattern pattern = Pattern.compile("<(http://[^>]+)>");
+        Matcher matcher = pattern.matcher(line);
+        if (matcher.find()) {
+            reportUrl = matcher.group(1);
+        }
+        return reportUrl;
+    }
+
     /* Method is executed after the test suite finishes and quits the WebDriver instances for both user and driver */
     @AfterSuite
     public void tearDown() throws IOException {
@@ -866,6 +892,8 @@ public class AutomationFlow extends BaseClass implements ITestListener {
         } else if (driver != null) {
             driver.quit();
         }
-        runAllureServe();
+        String allurePath = "/opt/homebrew/bin/allure";
+        String resultsPath = "allure-results";
+        runAllureServe(allurePath, resultsPath);
     }
 }
