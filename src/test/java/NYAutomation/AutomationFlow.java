@@ -2,6 +2,7 @@ package NYAutomation;
 
 
 
+import org.testng.annotations.Test;
 import base.BaseClass;
 
 import base.ADBDeviceFetcher;
@@ -29,17 +30,12 @@ import io.qameta.allure.Story;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import java.io.File;
-import java.util.Scanner;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -57,9 +53,14 @@ import org.openqa.selenium.NoSuchElementException;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
-import org.testng.annotations.Test;
 
 import static base.ADBDeviceFetcher.resolutions;
+
+
+import java.io.FileOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import java.io.FileInputStream;
 
 
 public class AutomationFlow extends BaseClass {
@@ -79,9 +80,13 @@ public class AutomationFlow extends BaseClass {
     @Feature("TestNG support")
     @Story("Application flow")
     /* Creating a method for overall flow of the applications */
+    
     public void flow() throws Exception {
-    	/* Add Allure report cleanup code here */
-    	cleanupAllureReport();
+		/* Add Allure report cleanup code here */
+//    	System.out.print("Do you want to delete the files in the Allure report directory? (yes/no): ");
+    	String confirmation = System.getProperty("confirmation");
+    	cleanupAllureReport(confirmation);
+    	
     	/* Fetch test data from Google Sheet */
         TestDataReader.fetchTabNames();
         ADBDeviceFetcher.fetchAdbDeviceProperties();
@@ -140,7 +145,7 @@ public class AutomationFlow extends BaseClass {
         Allure.addAttachment("Devices Config", devicesConfig.toString());
     }
 
-    private void cleanupAllureReport() {
+    private void cleanupAllureReport(String confirmation) {
         // Specify the directory path where the Allure report files are located
         String reportDirectoryPath = System.getProperty("user.dir") + File.separator + "allure-results";
 
@@ -149,15 +154,8 @@ public class AutomationFlow extends BaseClass {
 
         // Check if the directory exists
         if (reportDirectory.exists() && reportDirectory.isDirectory()) {
-            // Prompt the user for confirmation
-            System.out.print("Do you want to delete the files in the Allure report directory? (yes/no): ");
-
-            // Read user input
-            Scanner scanner = new Scanner(System.in);
-            String userInput = scanner.nextLine();
-
-            // Check user response
-            if (userInput.equalsIgnoreCase("yes")) {
+            // Check user confirmation
+            if (confirmation.equalsIgnoreCase("yes")) {
                 // Get all files in the directory
                 File[] files = reportDirectory.listFiles();
 
@@ -608,7 +606,7 @@ public class AutomationFlow extends BaseClass {
     public Wait<AndroidDriver> waitTime(boolean isUser) {
     	/* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(100))
+                .withTimeout(Duration.ofSeconds(200))
                 .pollingEvery(Duration.ofMillis(1000))
                 .ignoring(Exception.class);
 		return wait;
@@ -671,7 +669,7 @@ public class AutomationFlow extends BaseClass {
    
 	private boolean checkAutoStartPermission() {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
-	    return (brandNames.get(DriverDeviceIndex).equals("google") || brandNames.get(DriverDeviceIndex).equals("Android"));
+	    return (brandNames.get(DriverDeviceIndex).equals("google") || brandNames.get(DriverDeviceIndex).equals("Android") || brandNames.get(DriverDeviceIndex).equals("samsung"));
 	}
     
     public void validateMobileNumberAndOtp(String state, String sendKeysValue, String screen, WebDriver driver) throws InterruptedException, IOException {
@@ -959,56 +957,99 @@ public class AutomationFlow extends BaseClass {
         Allure.getLifecycle().updateTestCase(testResult -> testResult.setStatus(Status.PASSED));
     }
 
-    public static String runAllureServe(String allurePath, String resultsPath) {
-        String reportUrl = null;
-        String lastReportUrl = null; // Store the last parsed report URL
+    public static void zipAllureReportFolder(String sourceFolderPath, String zipFilePath) {
         try {
-            // Specify the command to execute
-            String command = allurePath + " serve " + System.getProperty("user.dir") + File.separator + resultsPath;
-            // Execute the command
-            Process process = Runtime.getRuntime().exec(command);
-            // Read the output from the process to get the report URL
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-                reportUrl = parseReportUrl(line);
-                if (reportUrl != null) {
-                    lastReportUrl = reportUrl; // Update the last known report URL
-                    System.out.println("Report URL: " + reportUrl);
+            FileOutputStream fos = new FileOutputStream(zipFilePath);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            File folder = new File(sourceFolderPath);
+            addFolderToZip(folder, folder.getName(), zos);
+
+            zos.close();
+            fos.close();
+
+            System.out.println("Allure report folder successfully zipped to: " + zipFilePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void addFolderToZip(File folder, String parentFolderName, ZipOutputStream zos) throws IOException {
+        for (File file : folder.listFiles()) {
+            if (file.isDirectory()) {
+                addFolderToZip(file, parentFolderName + File.separator + file.getName(), zos);
+            } else {
+                byte[] buffer = new byte[1024];
+                FileInputStream fis = new FileInputStream(file);
+                zos.putNextEntry(new ZipEntry(parentFolderName + File.separator + file.getName()));
+                int length;
+                while ((length = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, length);
+                }
+                zos.closeEntry();
+                fis.close();
+            }
+        }
+    }
+    
+    public static void sendZipToSlack(String zipFilePath, String preMessage, String postMessage) {
+        try {
+            String channelID = "D05640QK3TN";
+            String slackToken = "xoxp-4816210052547-4818792154884-5541765765638-5fbfe248e61a008edfc8d13533c32f21";
+            
+            // Pre-message
+            if (preMessage != null && !preMessage.isEmpty()) {
+                String preMessageCommand = "curl -X POST -H \"Authorization: Bearer " + slackToken + "\" -H \"Content-type: application/json\" -d '{\"channel\": \"" + channelID + "\", \"text\": \"" + preMessage + "\"}' https://slack.com/api/chat.postMessage";
+                ProcessBuilder preMessageBuilder = new ProcessBuilder("bash", "-c", preMessageCommand);
+                Process preMessageProcess = preMessageBuilder.start();
+                int preMessageExitCode = preMessageProcess.waitFor();
+                if (preMessageExitCode != 0) {
+                    System.err.println("Failed to send pre-message to Slack. Exit code: " + preMessageExitCode);
                 }
             }
-            // Wait for the process to complete
+            // Send ZIP file
+            String curlCommand = "curl -F file=@" + zipFilePath + " -F channels=" + channelID + " -H \"Authorization: Bearer " + slackToken + "\" https://slack.com/api/files.upload";
+            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+            Process process = processBuilder.start();
             int exitCode = process.waitFor();
-            // Print the exit code
-            System.out.println("Allure serve command executed. Exit code: " + exitCode);
+            if (exitCode == 0) {
+                System.out.println("Zip file sent to Slack successfully.");
+            } else {
+                System.err.println("Failed to send zip file to Slack. Exit code: " + exitCode);
+            }
+            
+            // Post-message
+            if (postMessage != null && !postMessage.isEmpty()) {
+                String formattedPostMessage = "After downloading, open the terminal and run `brew install allure` command.\nUnzip the zipped report folder.\nThen open your downloaded reports using `allure serve /Users/<user.name>/Downloads/allure-results`.";
+                String postMessageCommand = "curl -X POST -H \"Authorization: Bearer " + slackToken + "\" -H \"Content-type: application/json\" -d '{\"channel\": \"" + channelID + "\", \"text\": \"" + formattedPostMessage + "\"}' https://slack.com/api/chat.postMessage";
+                ProcessBuilder postMessageBuilder = new ProcessBuilder("bash", "-c", postMessageCommand);
+                Process postMessageProcess = postMessageBuilder.start();
+                int postMessageExitCode = postMessageProcess.waitFor();
+                if (postMessageExitCode != 0) {
+                    System.err.println("Failed to send post-message to Slack. Exit code: " + postMessageExitCode);
+                }
+            }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        return lastReportUrl; // Return the last parsed report URL
     }
 
-    private static String parseReportUrl(String line) {
-        String reportUrl = null;
-        Pattern pattern = Pattern.compile("<(http://[^>]+)>");
-        Matcher matcher = pattern.matcher(line);
-        if (matcher.find()) {
-            reportUrl = matcher.group(1);
-        }
-        return reportUrl;
-    }
-    
-    
-    /* Method is executed after the test suite finishes and quits the WebDriver instances for both user and driver */
-    @AfterSuite
+
+	@AfterSuite
     public void tearDown() throws IOException {
         if (user != null) {
             user.quit();
         } else if (driver != null) {
             driver.quit();
         }
-        String allurePath = "/opt/homebrew/bin/allure";
-        String resultsPath = "allure-results";
-        runAllureServe(allurePath, resultsPath);
+
+        String slackToken = "xoxp-4816210052547-4818792154884-5541765765638-5fbfe248e61a008edfc8d13533c32f21";
+        String allureReportFolder = System.getProperty("user.dir") + File.separator + "allure-results";
+        String zipFilePath = System.getProperty("user.dir") + File.separator + "allure-results" + File.separator + "allure-report.zip";
+        
+        zipAllureReportFolder(allureReportFolder, zipFilePath);
+        String preMessage = "Allure report is ready for download";
+        String postMessage = "After downloading, open terminal and run `brew install allure` command\nUnzip the zipped report folder\nThen open your downloaded reports using allure serve /Users/<user.name>/Downloads/allure-results";
+        sendZipToSlack(zipFilePath, preMessage, postMessage);
     }
 }
