@@ -2,6 +2,7 @@ package NYAutomation;
 
 
 
+import org.testng.annotations.Test;
 import base.BaseClass;
 import base.LogcatToFile;
 import base.ADBDeviceFetcher;
@@ -17,30 +18,35 @@ import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
+import io.appium.java_client.screenrecording.CanRecordScreen;
 import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.touch.offset.PointOption;
 import io.appium.java_client.TouchAction;
 
 import io.qameta.allure.Allure;
 import io.qameta.allure.model.Status;
+import okhttp3.*;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.io.File;
-
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.time.Duration;
 import java.util.Scanner;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -58,7 +64,6 @@ import org.openqa.selenium.NoSuchElementException;
 
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
-import org.testng.annotations.Test;
 
 
 
@@ -72,19 +77,18 @@ public class AutomationFlow extends BaseClass {
 	private final String userMobileNumber = "7777777722";
 	private final String driverMobileNumber = "9999999922";
 	
-	private String cugUserMobileNumber = "8497879347";
-	private String cugDriverMobileNumber = "8497879347";
-	
     private static boolean ReportFlag = true;
     private static char[] firstAltNumber;
     long prevTimeStamp;
     long currentTimeStamp;
     String formattedTimeDifference = "";
+
+    public Path userVideoFileLocation;
+    public Path driverVideoFileLocation;
     
     public static boolean userFlag = true;
     public static boolean driverFlag = true;
     public static boolean isUser = false;
-    public static String cugOrMasterInput;
     
     
 	@Test
@@ -92,18 +96,18 @@ public class AutomationFlow extends BaseClass {
     @Feature("TestNG support")
     @Story("Application flow")
     /* Creating a method for overall flow of the applications */
+    
     public void flow() throws Exception {
-    	/* Add Allure report cleanup code here */
+		/* Add Allure report cleanup code here */
+//    	System.out.print("Do you want to delete the files in the Allure report directory? (yes/no): ");
+    	String confirmation = System.getProperty("confirmation");
+    	cleanupAllureReport(confirmation);
+    	
     	/* Fetch test data from Google Sheet */
         TestDataReader.fetchTabNames();
         ADBDeviceFetcher.fetchAdbDeviceProperties();
         String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
         LogcatToFile.CaptureLogs();
-        cleanupAllureReport();
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter 'cug' or 'master': ");
-        cugOrMasterInput = scanner.next();
-        scanner.close();
         
         prevTimeStamp = System.currentTimeMillis();
 
@@ -118,11 +122,11 @@ public class AutomationFlow extends BaseClass {
 
             if ((userFlag && isUser)) {
                 userFlag = false;
-                callSetup(isUser);
+                setup(isUser);
             }
             else if ((driverFlag && !isUser)) {
                 driverFlag = false;
-                callSetup(isUser);
+                setup(isUser);
             }
 
             System.out.println("EpochTime: " + currentTimeStamp + " | ActionTime: " + formattedTimeDifference + " | screen: " + screen + " | state: " + state + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
@@ -138,15 +142,7 @@ public class AutomationFlow extends BaseClass {
         }
         logPassToAllureReport("Build Passed!", driver, user, screenStatusMap);
     }
-    
-    private void callSetup(boolean isUser) throws IOException {
-        if(cugOrMasterInput.toLowerCase().equals("cug")) {
-            cugSetup(isUser);
-        }
-        else {
-            setup(isUser);
-        }
-    }
+
 
     // Method to format time difference as "X m Y s Z ms"
     public String formatTimeDifference(long timeDifference) {
@@ -184,7 +180,7 @@ public class AutomationFlow extends BaseClass {
         Allure.addAttachment("Devices Config", devicesConfig.toString());
     }
 
-    public void cleanupAllureReport() throws IOException {
+    private void cleanupAllureReport(String confirmation) {
         // Specify the directory path where the Allure report files are located
         String reportDirectoryPath = System.getProperty("user.dir") + File.separator + "allure-results";
 
@@ -244,12 +240,7 @@ public class AutomationFlow extends BaseClass {
                 }
             } catch (NoSuchElementException e) {}
             (isUser ? user : driver).findElement(AppiumBy.xpath(xpath)).click();
-            if (cugOrMasterInput.contains("cug")) {
-            	sendKeysValue = (isUser ? cugUserMobileNumber : cugDriverMobileNumber);
-            }
-            else {
             	sendKeysValue = (isUser ? userMobileNumber : driverMobileNumber);
-            }
         }
         
     	else if ("Location Permission".equals(state)) {
@@ -591,9 +582,6 @@ public class AutomationFlow extends BaseClass {
         
     	/* Validating the otp entered is correct or not */
         else if ("Login OTP".equals(state)) {
-        	if (cugOrMasterInput.contains("cug")) {
-        		return;
-        	}
     	    user.findElement(AppiumBy.xpath("//android.widget.EditText[@text='Enter 4 digit OTP']")).click();
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_7));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_8));
@@ -609,9 +597,6 @@ public class AutomationFlow extends BaseClass {
         }
     	
         else if ("Driver Login OTP".equals(state)) {
-        	if (cugOrMasterInput.contains("cug")) {
-        		return;
-        	}
     		driver.findElement(AppiumBy.xpath("//android.widget.EditText[@text='Auto Reading OTP...']")).click();
     		Thread.sleep(3000);
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_7));
@@ -894,7 +879,7 @@ public class AutomationFlow extends BaseClass {
             return phoneNumberSecond.toCharArray();
     }
     
-    public void alternateMobileNumberValidation(String state, String xpath) throws IOException  {
+    public void alternateMobileNumberValidation(String state, String xpath)  {
     	if ("Check Alternate Number in Homescreen".equals(state)) {
     	    try {
     	        if (driver.findElement(AppiumBy.xpath(xpath)).isDisplayed()) {
@@ -1089,58 +1074,176 @@ public class AutomationFlow extends BaseClass {
         LogcatToFile.searchJavaScriptError();
         LogcatToFile.fetchExceptions();
     }
-    
-    public static String runAllureServe(String allurePath, String resultsPath) {
-        String reportUrl = null;
-        String lastReportUrl = null; // Store the last parsed report URL
+
+    public static void zipAllureReportFolder(String sourceFolderPath, String zipFilePath) {
         try {
-            // Specify the command to execute
-            String command = allurePath + " serve " + System.getProperty("user.dir") + File.separator + resultsPath;
-            // Execute the command
-            Process process = Runtime.getRuntime().exec(command);
-            // Read the output from the process to get the report URL
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-                reportUrl = parseReportUrl(line);
-                if (reportUrl != null) {
-                    lastReportUrl = reportUrl; // Update the last known report URL
-                    System.out.println("Report URL: " + reportUrl);
-                }
-            }
-            // Wait for the process to complete
-            int exitCode = process.waitFor();
-            // Print the exit code
-            System.out.println("Allure serve command executed. Exit code: " + exitCode);
-        } catch (IOException | InterruptedException e) {
+            FileOutputStream fos = new FileOutputStream(zipFilePath);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            File folder = new File(sourceFolderPath);
+            addFolderToZip(folder, folder.getName(), zos);
+
+            zos.close();
+            fos.close();
+
+            System.out.println("Allure report folder successfully zipped to: " + zipFilePath);
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        return lastReportUrl; // Return the last parsed report URL
     }
-    
-    private static String parseReportUrl(String line) {
-        String reportUrl = null;
-        Pattern pattern = Pattern.compile("<(http://[^>]+)>");
-        Matcher matcher = pattern.matcher(line);
-        if (matcher.find()) {
-            reportUrl = matcher.group(1);
+
+    private static void addFolderToZip(File folder, String parentFolderName, ZipOutputStream zos) throws IOException {
+        for (File file : folder.listFiles()) {
+            if (file.isDirectory()) {
+                addFolderToZip(file, parentFolderName + File.separator + file.getName(), zos);
+            } else {
+                byte[] buffer = new byte[1024];
+                FileInputStream fis = new FileInputStream(file);
+                zos.putNextEntry(new ZipEntry(parentFolderName + File.separator + file.getName()));
+                int length;
+                while ((length = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, length);
+                }
+                zos.closeEntry();
+                fis.close();
+            }
         }
-        return reportUrl;
     }
     
+    public static void sendZipToSlack(String zipFilePath, String message) {
+        try {
+            String channelID = "";
+            String slackToken = "";
+
+            OkHttpClient client = new OkHttpClient();
+            MediaType mediaType = MediaType.parse("application/zip");
+
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", zipFilePath, RequestBody.create(mediaType, new java.io.File(zipFilePath)))
+                    .addFormDataPart("channels", channelID)
+                    .addFormDataPart("initial_comment", message)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer " + slackToken)
+                    .build();
+
+            Response response = client.newCall(request).execute();
+            if (response.isSuccessful()) {
+                System.out.println("Zip file sent to Slack successfully.");
+            } else {
+                System.err.println("Failed to send zip file to Slack. Response code: " + response.code());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void stopScreenRecording() {
+		/** stop recording for Driver screen **/
+		if (user != null) {
+            String userVideo = ((CanRecordScreen) user).stopRecordingScreen();
+            byte[] userDecodeVideo = Base64.getMimeDecoder().decode(userVideo);
+            try {
+                Path userVideoDir = Paths.get(System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "ScreenRecordings");
+				Files.createDirectories(userVideoDir);
+				userVideoFileLocation = Paths.get(userVideoDir.toString(), String.format("%s.%s", "UserRecording", "mp4"));
+				Files.write(userVideoFileLocation, userDecodeVideo);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("stopScreenRecording executed Driver");
+        }
+
+		if (driver != null) {
+			/** stop recording for User screen **/
+			String driverVideo = ((CanRecordScreen) driver).stopRecordingScreen();
+			byte[] driverDecodeVideo = Base64.getMimeDecoder().decode(driverVideo);
+			try {
+				Path driverVideoDir = Paths.get(System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "ScreenRecordings");
+				Files.createDirectories(driverVideoDir);
+				driverVideoFileLocation = Paths.get(driverVideoDir.toString(), String.format("%s.%s", "DriverRecording", "mp4"));
+				Files.write(driverVideoFileLocation, driverDecodeVideo);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			System.out.println("stopScreenRecording executed User");
+		}
+	}
+	
+
+	public static void sendMp4ToSlack(Path videoFilePath, String message) {
+        try {
+            String channelID = "";
+            String slackToken = "";
+            OkHttpClient client = new OkHttpClient();
+            MediaType mediaType = MediaType.parse("application/mp4");
+            
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", videoFilePath.toString(), RequestBody.create(mediaType, new java.io.File(videoFilePath.toString())))
+                    .addFormDataPart("channels", channelID)
+                    .addFormDataPart("initial_comment", message)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer " + slackToken)
+                    .build();
+
+            Response response = client.newCall(request).execute();
+            if (response.isSuccessful()) {
+                System.out.println("Zip file sent to Slack successfully.");
+            } else {
+                System.err.println("Failed to send zip file to Slack. Response code: " + response.code());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     
-    /* Method is executed after the test suite finishes and quits the WebDriver instances for both user and driver */
-    @AfterSuite
-    public void tearDown() throws IOException {
+
+	@AfterSuite
+    public void tearDown() throws InterruptedException {
+        stopScreenRecording();
+
         if (user != null) {
             user.quit();
         } if (driver != null) {
             driver.quit();
         }
-        // String allurePath = "/opt/homebrew/bin/allure";
-        String allurePath = "/usr/local/bin/allure";
-        String resultsPath = "allure-results";
-        runAllureServe(allurePath, resultsPath);
+
+        String allureReportFolder = System.getProperty("user.dir") + File.separator + "allure-results";
+        String zipFilePath = System.getProperty("user.dir") + File.separator + "allure-results" + File.separator + "allure-report.zip";
+        
+        zipAllureReportFolder(allureReportFolder, zipFilePath);
+        String message = "Follow 👇 steps to check your reports :- \n"
+        		+ "1. Allure report is ready, download it\n"
+                + "2. Unzip the report folder\n"
+                + "3. If allure is not installed, then run `brew install allure` in terminal\n"
+                + "4. Checkout to the directory in the terminal in which the report is downloaded. Open using `allure serve allure-results`\n"
+                + "(or) give the command along with the directory path of the report folder, for eg., `allure serve /Users/<user.name>/Downloads/allure-results` \n"
+                + "5. After opening click on show all in the Suites and see test case details on the right on side ";
+        sendZipToSlack(zipFilePath, message);
+        
+        Thread.sleep(5000);
+        
+        if (driverVideoFileLocation != null) {
+        	// Upload Driver video to Slack
+        	String recordMessage = "Attached Screen recording for Driver👇";
+        	sendMp4ToSlack(driverVideoFileLocation, recordMessage);
+        }
+        if (userVideoFileLocation != null) {
+        	// Upload User video to Slack
+        	String recordMessage = "Attached Screen recording for User👇";
+        	sendMp4ToSlack(userVideoFileLocation, recordMessage);
+        }
     }
 }
