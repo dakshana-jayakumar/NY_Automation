@@ -72,8 +72,8 @@ public class SlackBotIntegration {
     
         app.command("/startautomation", (req, ctx) -> {
             String instructionMessage = "To start automation, please choose one of the following commands:\n"
-                    + "`/yesss` - Delete existing report files and start automation.\n"
-                    + "`/nooo` - Keep existing report files and start automation.";
+                    + "`/yes` - Delete existing report files and start automation.\n"
+                    + "`/no` - Keep existing report files and start automation.";
             ctx.say(instructionMessage);
             return ctx.ack();
         });
