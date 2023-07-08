@@ -194,7 +194,7 @@ public class AutomationFlow extends BaseClass {
         }
         else if("Overlay screen Back Icon".equals(state)){
             int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
-            if ((androidVersion == 10) || (androidVersion <= 8)) {
+            if ((androidVersion == 10) || (androidVersion <= 8) || (androidVersion == 12)) {
                 KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.BACK);
     	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
                 return;
@@ -624,7 +624,7 @@ public class AutomationFlow extends BaseClass {
 	
 	private String checkBatteryPermission(String modifiedXpath) {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
-	    if ("google".equals(brandNames.get(DriverDeviceIndex)) || ("Android".equals(brandNames.get(DriverDeviceIndex)))) {
+	    if ("google".equals(brandNames.get(DriverDeviceIndex)) || ("Android".equals(brandNames.get(DriverDeviceIndex)) || ("samsung".equals(brandNames.get(DriverDeviceIndex))))) {
 	        modifiedXpath += "2]"; /* Append "2]" to xpath */
 	    }
         else if("POCO".equals(brandNames.get(DriverDeviceIndex)) || "Redmi".equals(brandNames.get(DriverDeviceIndex))){
