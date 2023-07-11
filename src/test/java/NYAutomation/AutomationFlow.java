@@ -62,6 +62,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import java.io.FileInputStream;
 
+import okhttp3.*;
+
+
 
 public class AutomationFlow extends BaseClass {
 
@@ -606,7 +609,7 @@ public class AutomationFlow extends BaseClass {
     public Wait<AndroidDriver> waitTime(boolean isUser) {
     	/* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(200))
+                .withTimeout(Duration.ofSeconds(50))
                 .pollingEvery(Duration.ofMillis(1000))
                 .ignoring(Exception.class);
 		return wait;
@@ -992,47 +995,38 @@ public class AutomationFlow extends BaseClass {
         }
     }
     
-    public static void sendZipToSlack(String zipFilePath, String preMessage, String postMessage) {
+    public static void sendZipToSlack(String zipFilePath, String message) {
         try {
-            String channelID = "D05640QK3TN";
-            String slackToken = "xoxp-4816210052547-4818792154884-5541765765638-5fbfe248e61a008edfc8d13533c32f21";
-            
-            // Pre-message
-            if (preMessage != null && !preMessage.isEmpty()) {
-                String preMessageCommand = "curl -X POST -H \"Authorization: Bearer " + slackToken + "\" -H \"Content-type: application/json\" -d '{\"channel\": \"" + channelID + "\", \"text\": \"" + preMessage + "\"}' https://slack.com/api/chat.postMessage";
-                ProcessBuilder preMessageBuilder = new ProcessBuilder("bash", "-c", preMessageCommand);
-                Process preMessageProcess = preMessageBuilder.start();
-                int preMessageExitCode = preMessageProcess.waitFor();
-                if (preMessageExitCode != 0) {
-                    System.err.println("Failed to send pre-message to Slack. Exit code: " + preMessageExitCode);
-                }
-            }
-            // Send ZIP file
-            String curlCommand = "curl -F file=@" + zipFilePath + " -F channels=" + channelID + " -H \"Authorization: Bearer " + slackToken + "\" https://slack.com/api/files.upload";
-            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-            Process process = processBuilder.start();
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
+            String channelID = "";
+            String slackToken = "";
+
+            OkHttpClient client = new OkHttpClient();
+            MediaType mediaType = MediaType.parse("application/zip");
+
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", zipFilePath, RequestBody.create(mediaType, new java.io.File(zipFilePath)))
+                    .addFormDataPart("channels", channelID)
+                    .addFormDataPart("initial_comment", message)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url("https://slack.com/api/files.upload")
+                    .post(requestBody)
+                    .addHeader("Authorization", "Bearer " + slackToken)
+                    .build();
+
+            Response response = client.newCall(request).execute();
+            if (response.isSuccessful()) {
                 System.out.println("Zip file sent to Slack successfully.");
             } else {
-                System.err.println("Failed to send zip file to Slack. Exit code: " + exitCode);
+                System.err.println("Failed to send zip file to Slack. Response code: " + response.code());
             }
-            
-            // Post-message
-            if (postMessage != null && !postMessage.isEmpty()) {
-                String formattedPostMessage = "After downloading, open the terminal and run `brew install allure` command.\nUnzip the zipped report folder.\nThen open your downloaded reports using `allure serve /Users/<user.name>/Downloads/allure-results`.";
-                String postMessageCommand = "curl -X POST -H \"Authorization: Bearer " + slackToken + "\" -H \"Content-type: application/json\" -d '{\"channel\": \"" + channelID + "\", \"text\": \"" + formattedPostMessage + "\"}' https://slack.com/api/chat.postMessage";
-                ProcessBuilder postMessageBuilder = new ProcessBuilder("bash", "-c", postMessageCommand);
-                Process postMessageProcess = postMessageBuilder.start();
-                int postMessageExitCode = postMessageProcess.waitFor();
-                if (postMessageExitCode != 0) {
-                    System.err.println("Failed to send post-message to Slack. Exit code: " + postMessageExitCode);
-                }
-            }
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 
 
 	@AfterSuite
@@ -1043,13 +1037,17 @@ public class AutomationFlow extends BaseClass {
             driver.quit();
         }
 
-        String slackToken = "xoxp-4816210052547-4818792154884-5541765765638-5fbfe248e61a008edfc8d13533c32f21";
         String allureReportFolder = System.getProperty("user.dir") + File.separator + "allure-results";
         String zipFilePath = System.getProperty("user.dir") + File.separator + "allure-results" + File.separator + "allure-report.zip";
         
         zipAllureReportFolder(allureReportFolder, zipFilePath);
-        String preMessage = "Allure report is ready for download";
-        String postMessage = "After downloading, open terminal and run `brew install allure` command\nUnzip the zipped report folder\nThen open your downloaded reports using allure serve /Users/<user.name>/Downloads/allure-results";
-        sendZipToSlack(zipFilePath, preMessage, postMessage);
+        String message = "Follow 👇 steps to check 👀 your reports :- \n"
+        		+ "1. Allure report is ready, download 📥 it\n"
+                + "2. Unzip the report folder\n"
+                + "3. If allure is not there, open the terminal and run `brew install allure` command to access the report\n"
+                + "4. Checkout to the directory in the terminal in which the report is downloaded. Open 📂 using `allure serve allure-results`\n"
+                + "(or) give the command along with the directory path of the report folder, for eg., `allure serve /Users/<user.name>/Downloads/allure-results` \n"
+                + "5. After opening click on show all in the Suites and see test case details on the right on sideℹ️ ";
+        sendZipToSlack(zipFilePath, message);
     }
 }
