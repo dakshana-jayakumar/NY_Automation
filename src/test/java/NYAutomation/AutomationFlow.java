@@ -7,6 +7,9 @@ import base.BaseClass;
 import base.ADBDeviceFetcher;
 import static base.ADBDeviceFetcher.androidVersions;
 import static base.ADBDeviceFetcher.brandNames;
+import static base.ADBDeviceFetcher.modelNames;
+import static base.ADBDeviceFetcher.resolutions;
+import static base.ADBDeviceFetcher.devices;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -107,14 +110,32 @@ public class AutomationFlow extends BaseClass {
             	screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Passed");
             }
             catch (Exception e) {
-                LogcatToFile.searchErrCode(isUser);
+                LogcatToFile.searchApiErr(isUser);
+                LogcatToFile.searchJavaScriptError(isUser);
+                addDeviceConfigToReport();
                 screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Failed");
             	logErrorToAllureReport(e.getMessage(), driver, user, screenStatusMap);
                 // Thread.sleep(3000);
                 throw e;
             }
         }
+        addDeviceConfigToReport();
         logPassToAllureReport("Build Passed!", driver, user, screenStatusMap);
+    }
+
+    private void addDeviceConfigToReport() {
+        StringBuilder devicesConfig = new StringBuilder();
+        devicesConfig.append(String.format("%-20s | %-15s | %-30s | %-15s | %-15s%n", "Device", "Brand", "Model", "Version", "Resolution"));
+        
+        for (int i = 0; i < DeviceIndex; i++) {
+            String device = i < devices.size() ? devices.get(i) : "N/A";
+            String brand = i < brandNames.size() ? brandNames.get(i) : "N/A";
+            String model = i < modelNames.size() ? modelNames.get(i) : "N/A";
+            String version = i < androidVersions.size() ? androidVersions.get(i) : "N/A";
+            String resolution = i < resolutions.size() ? resolutions.get(i) : "N/A";
+            devicesConfig.append(String.format("%-20s | %-15s | %-30s | %-15s | %-15s%n", device, brand, model, version, resolution));
+        }
+        Allure.addAttachment("Devices Config", devicesConfig.toString());
     }
 
     private void cleanupAllureReport() {
@@ -180,13 +201,13 @@ public class AutomationFlow extends BaseClass {
          		}
         }
         
-    	if ("Location Permission".equals(state)) {
+    	else if ("Location Permission".equals(state)) {
             /* If the state is "Location Permission" */
             /* Call the checkLocationPermission method to modify the xpath value */
             xpath = checkLocationPermission(xpath, isUser);
         }
         
-    	if ("Select Namma Yatri Partner".equals(state)) {
+    	else if ("Select Namma Yatri Partner".equals(state)) {
             /* If the state is "Select Namma Yatri Partner"*/
             /* Call the checkLocationPermission method to perform action */
             boolean doAction = checkOverlayPermission();
