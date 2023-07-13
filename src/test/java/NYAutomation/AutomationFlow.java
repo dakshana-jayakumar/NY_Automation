@@ -42,6 +42,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -180,18 +181,19 @@ public class AutomationFlow extends BaseClass {
          		}
         }
         
-    	if ("Location Permission".equals(state)) {
+    	else if ("Location Permission".equals(state)) {
             /* If the state is "Location Permission" */
             /* Call the checkLocationPermission method to modify the xpath value */
             xpath = checkLocationPermission(xpath, isUser);
         }
         
-    	if ("Select Namma Yatri Partner".equals(state)) {
+    	else if ("Select Namma Yatri Partner".equals(state)) {
             /* If the state is "Select Namma Yatri Partner"*/
             /* Call the checkLocationPermission method to perform action */
             boolean doAction = checkOverlayPermission();
             if(!doAction) {return;}
         }
+
         else if("Overlay screen Back Icon".equals(state)){
             int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
             if ((androidVersion == 10) || (androidVersion <= 8) || (androidVersion == 12)) {
@@ -200,11 +202,13 @@ public class AutomationFlow extends BaseClass {
                 return;
     	    }
         }
+
         else if ("Allow Battery Optimization".equals(state)) {
             /* If the state is "Allow Battery Optimization" */
             /* Call the checkBatteryPermission method to modify the xpath value */
             xpath = checkBatteryPermission(xpath);
         }
+
         else if ("AutoStart".equals(state)) {
         	int androidVersion = Integer.parseInt(androidVersions.get(DriverDeviceIndex));
     	    if (androidVersion == 10) {
@@ -213,16 +217,19 @@ public class AutomationFlow extends BaseClass {
     	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
             }
         }
+
         else if ("AutoStart Screen Back Icon".equals(state) && checkAutoStartPermission()) {
             /* If the state is "AutoStart Screen Back Icon" and checkAutoStartPermission is true */
             /* Return from the current method or function */
             return;
         }
+
         else if ("Back Press".equals(state)) {
             Thread.sleep(5000);
             (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.BACK));
             return;
         }
+
         else if ("Scroll Function".equals(state)) {
         	boolean canScrollMore = (Boolean)user.executeScript("mobile: scrollGesture", ImmutableMap.of(
     				"left", 100, "top", 100, "width", 1200, "height", 1200,
@@ -232,6 +239,7 @@ public class AutomationFlow extends BaseClass {
         	Thread.sleep(3000);
         	return;
         }
+
         else if (("Fetch Otp").equals(state)) {
         	/* Fetching OTP digits */
             for (int i = 1; i <= 4; i++) {
@@ -252,6 +260,7 @@ public class AutomationFlow extends BaseClass {
             Thread.sleep(2000);
             return;
         }
+
         else if ("Google Map".equals(state)) {
     	    	int loopCount = 2; // Number of times to loop
 
@@ -263,6 +272,7 @@ public class AutomationFlow extends BaseClass {
     	    }
     	    return;
     	}
+
         else if ("Home Press".equals(state)) {
             Thread.sleep(2000);
             (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.HOME));
@@ -321,7 +331,7 @@ public class AutomationFlow extends BaseClass {
         	return;
         }
         
-        else if (("Allow Permission".equals(state)) && ("12".equals(androidVersions.get(UserDeviceIndex)))){return;}
+        else if (("Allow Permission".equals(state)) && ("12".equals(androidVersions.get(UserDeviceIndex)) || ("13".equals(androidVersions.get(UserDeviceIndex))))){return;}
         
         else if ("Favourite update toast".equals(state)) {
         	String ToastMessage = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
@@ -554,6 +564,29 @@ public class AutomationFlow extends BaseClass {
     	    }
     	    return;
     	}
+    	
+    	else if (("Writing user reason".equals(state))) {
+        	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.S));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.Y));
+        	return;
+        }
+
+        else if ("Writing driver reason".equals(state)) {
+        	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.S));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.Y));
+        	return;
+        }
+    	
+    	else if ("Waiting Time".equals(state)) {
+        	Thread.sleep(5000);
+        	return;
+        }
         
          /* Function calls for both Customer and Driver */   
         {
@@ -676,31 +709,63 @@ public class AutomationFlow extends BaseClass {
     }
     
     public void cancelRide(String state, String xpath) throws InterruptedException {
-    	/* Function for pulling the startride popup till cancel ride, to cancel to ride */
-    	if("Draging bottom layout user".equals(state)){
-            By buttonLayoutLocator = By.xpath(xpath);
-            WebElement source = user.findElement(buttonLayoutLocator);
-            ((JavascriptExecutor) user).executeScript("mobile: dragGesture", ImmutableMap.of(
-                    "elementId", ((RemoteWebElement) source).getId(),
-                    "endX", 447,
-                    "endY", 400
-                    ));
+    	
+    	if ("Draging bottom layout user".equals(state)) {
+    	    By buttonLayoutLocator = By.xpath(xpath);
+    	    WebElement source = user.findElement(buttonLayoutLocator);
+    	    boolean cancelRideDisplayed = false;
+
+    	    while (!cancelRideDisplayed) {
+    	        try {
+    	            WebElement cancelRideElement = user.findElement(By.xpath("//android.widget.TextView[@text='Cancel Ride']"));
+    	            if (cancelRideElement.isDisplayed() && cancelRideElement.isEnabled()) {
+    	                cancelRideDisplayed = true;
+    	                cancelRideElement.click();  // Perform the desired action on the "Cancel Ride" element
+    	            }
+    	        } catch (NoSuchElementException | StaleElementReferenceException e) {
+    	        }
+
+    	        // Scroll the layout by dragging from source to destination coordinates
+    	        ((JavascriptExecutor) user).executeScript("mobile: dragGesture", ImmutableMap.of(
+    	                "elementId", ((RemoteWebElement) source).getId(),
+    	                "endX", 447,
+    	                "endY", 400
+    	        ));
+       	        Thread.sleep(2000);
+    	    }
     	}
-        
-        else if("Draging bottom layout driver".equals(state)) {
-        	By buttonLayoutLocator = By.xpath(xpath);
-            WebElement source = driver.findElement(buttonLayoutLocator);
-            ((JavascriptExecutor) driver).executeScript("mobile: dragGesture", ImmutableMap.of(
-            		"elementId", ((RemoteWebElement) source).getId(),
-            		"endX", 123,
-					"endY", 891
-            		));
-        }
+    	
+    	else if ("Draging bottom layout driver".equals(state)) {
+    	    By buttonLayoutLocator = By.xpath(xpath);
+    	    WebElement source = driver.findElement(buttonLayoutLocator);
+    	    boolean cancelRideDisplayed = false;
+
+    	    while (!cancelRideDisplayed) {
+    	        try {
+    	            WebElement cancelRideElement = driver.findElement(By.xpath("//android.widget.TextView[@text='Cancel Ride']"));
+    	            if (cancelRideElement.isDisplayed() && cancelRideElement.isEnabled()) {
+    	                cancelRideDisplayed = true;
+    	                cancelRideElement.click();  // Perform the desired action on the "Cancel Ride" element
+    	            }
+    	        } catch (NoSuchElementException | StaleElementReferenceException e) {
+    	        }
+
+    	        // Scroll the layout by dragging from source to destination coordinates
+    	        ((JavascriptExecutor) driver).executeScript("mobile: dragGesture", ImmutableMap.of(
+    	                "elementId", ((RemoteWebElement) source).getId(),
+    	                "endX", 123,
+    	                "endY", 891
+    	        ));
+    	        Thread.sleep(2000);
+    	    }
+    	}	
+    	
         else if ("Hamburger Click".equals(state)) {
         	Thread.sleep(7000);
         	By buttonLayoutLocator = By.xpath(xpath);
             WebElement element = user.findElement(buttonLayoutLocator);
         }
+
         else if ("Invoice Check".equals(state)) {
             String expected = "View Invoice";
             By buttonLayoutLocator = By.xpath(xpath);
