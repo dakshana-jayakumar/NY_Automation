@@ -101,9 +101,9 @@ public class LogcatToFile {
      * @return true if no error is found or the error is not within the specified time range, false otherwise.
      * @throws IOException if an I/O error occurs.
      */
-    public static Boolean searchErrCode(boolean isUser) throws IOException {
-        String searchString1 = "Err Code";
-        String searchString2 = "code  :  ";
+    public static void searchApiErr(boolean isUser) throws IOException {
+        String ApiErrorCode = "Err Code";
+        String ApiErrorMessage = "code  :  ";
         String matchedLine1 = null;
         String matchedLine2 = null;
         String deviceSerialNumber;
@@ -120,9 +120,9 @@ public class LogcatToFile {
             String line;
             String previousLine = null;
             while ((line = reader.readLine()) != null) {
-                if (line.contains(searchString1)) {
+                if (line.contains(ApiErrorCode)) {
                     matchedLine1 = previousLine + "\n" + line;
-                } else if (line.contains(searchString2)) {
+                } else if (line.contains(ApiErrorMessage)) {
                     matchedLine2 = matchedLine1 + "\n" + line;
                 }
                 previousLine = line;
@@ -139,8 +139,34 @@ public class LogcatToFile {
                 System.out.println("\nDriver Api Error:" + matchedLine2);
                 Allure.addAttachment("Driver Api Error ", matchedLine2);
             }
-            return false;
         }
-        return true;
+    }
+
+    public static void searchJavaScriptError(boolean isUser) {
+        String JavaScriptError = "TypeError:";
+        String errorString = null;
+        String deviceSerialNumber;
+
+        if (isUser) {deviceSerialNumber = devices.get(UserDeviceIndex);}
+        else {deviceSerialNumber = devices.get(DriverDeviceIndex);}
+        String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator 
+                                + "logFile_" + deviceSerialNumber + ".txt";
+        try (BufferedReader reader = new BufferedReader(new FileReader(readLogCatFile))) {
+            String line;
+            String previousLine = null;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains(JavaScriptError) && line.contains("chromium")) {
+                    errorString = previousLine + "\n" + line;
+                }
+                previousLine = line;
+            }
+        } catch (IOException e) {}
+        if ((errorString != null) && compareTime(errorString)){
+            if (isUser) {
+                Allure.addAttachment("User JavaScript Error ", errorString);
+            } else {
+                Allure.addAttachment("Driver JavaScript Error ", errorString);
+            }
+        }
     }
 }
