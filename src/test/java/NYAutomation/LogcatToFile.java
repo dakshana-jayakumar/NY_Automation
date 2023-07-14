@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+import org.json.JSONObject;
 import base.ADBDeviceFetcher;
 import static base.ADBDeviceFetcher.devices;
 import static base.BaseClass.DriverDeviceIndex;
@@ -102,42 +103,46 @@ public class LogcatToFile {
      * @throws IOException if an I/O error occurs.
      */
     public static void searchApiErr(boolean isUser) throws IOException {
-        String ApiErrorCode = "Err Code";
-        String ApiErrorMessage = "code  :  ";
-        String matchedLine1 = null;
-        String matchedLine2 = null;
+        String formattedText = null;
         String deviceSerialNumber;
+        String line = null;
+        String errTimeStampString = null;
         
         if (isUser) {
             deviceSerialNumber = devices.get(UserDeviceIndex);
         } else {
             deviceSerialNumber = devices.get(DriverDeviceIndex);
         }
-        
+
         String logcatFile1 = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator 
                                 + "logFile_" + deviceSerialNumber + ".txt";
         try (BufferedReader reader = new BufferedReader(new FileReader(logcatFile1))) {
-            String line;
-            String previousLine = null;
+            // String previousLine = null;
             while ((line = reader.readLine()) != null) {
-                if (line.contains(ApiErrorCode)) {
-                    matchedLine1 = previousLine + "\n" + line;
-                } else if (line.contains(ApiErrorMessage)) {
-                    matchedLine2 = matchedLine1 + "\n" + line;
+                if (line.contains("network_call") && line.contains("errorMessage")) {
+                    errTimeStampString = line;
+                    int startIndex = line.indexOf("{");
+                    String jsonPart = line.substring(startIndex);
+                    JSONObject logObject = new JSONObject(jsonPart);
+                    int statusCode = logObject.getJSONObject("value").getInt("status_code");
+                    String errorMessage = logObject.getJSONObject("value").getString("response");
+                    JSONObject responseObject = new JSONObject(errorMessage);
+                    String actualErrorMessage = responseObject.getString("errorCode");
+                    String url = logObject.getJSONObject("value").getString("url");
+                    formattedText = String.format("Status Code:   %d\nError Message: %-10s\nURL:      %20s", statusCode, actualErrorMessage, url);
                 }
-                previousLine = line;
             }
         } catch (IOException e) {
             // Handle any exceptions
         }
-        
-        if ((matchedLine2 != null) && compareTime(matchedLine2)){
+
+        if ((formattedText != null) && compareTime(errTimeStampString)){
             if (isUser) {
-                System.out.println("\nUser Api Error:" + matchedLine2);
-                Allure.addAttachment("User Api Error ", matchedLine2);
+                System.out.println("\nUser Api Error:" + formattedText);
+                Allure.addAttachment("User Api Error ", formattedText);
             } else {
-                System.out.println("\nDriver Api Error:" + matchedLine2);
-                Allure.addAttachment("Driver Api Error ", matchedLine2);
+                System.out.println("\nDriver Api Error:" + formattedText);
+                Allure.addAttachment("Driver Api Error ", formattedText);
             }
         }
     }
