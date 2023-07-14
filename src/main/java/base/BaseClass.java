@@ -15,7 +15,7 @@ public class BaseClass {
     public static String rideOTP = "";
     public static AndroidDriver user, driver;
     public static int UserDeviceIndex, DriverDeviceIndex;
-    private static int DeviceIndex = 0;
+    protected static int DeviceIndex = 0;
     public static void setup(boolean isUser) throws MalformedURLException {
 
         DesiredCapabilities userCapabilities = new DesiredCapabilities();
