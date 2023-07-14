@@ -71,6 +71,7 @@ public class AutomationFlow extends BaseClass {
 	private final String userMobileNumber = "7777777714";
 	private final String driverMobileNumber = "9999999920";
     private static boolean ReportFlag = true;
+    private static char[] firstAltNumber;
 
 
     @Test
@@ -553,63 +554,6 @@ public class AutomationFlow extends BaseClass {
     		return;
     	}
     	
-    	else if ("Alternate number validation".equals(state)) {
-            /* Driver alternate mobile number validation test case */
-    	    try {
-    	        if (driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Add Alternate Number']")).isDisplayed()) {
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Add Alternate Number']")).click();
-
-    	            long randomNumber = (long) (Math.random() * 900000000L) + 100000000L;
-    	            String phoneNumber1 = Long.toString(randomNumber);
-    	            String phoneNumber = "9" + phoneNumber1;
-    	            char[] mobNumber = phoneNumber.toCharArray();
-
-    	            for (int i = 0; i < 10; i++) {
-    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + mobNumber[i] + "']")).click();
-    	            }
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
-
-    	            char[] otp = { '7', '8', '9', '1' };
-    	            for (int k = 0; k < 4; k++) {
-    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + otp[k] + "']")).click();
-    	            }
-    	            driver.findElement( AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
-
-    	            String alternate = driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Mobile Number']/../android.widget.LinearLayout[1]/android.widget.TextView[1]")).getText();
-    	            System.out.println("Added Alternative number is: " + alternate);
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Edit']")).click();
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Edit Alternate Mobile Number']/../../android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.ImageView")).click();
-
-    	            long randomNumber2 = (long) (Math.random() * 900000000L) + 100000000L;
-    	            String phoneNumber2 = Long.toString(randomNumber2);
-    	            String phoneNumberSecond = "9" + phoneNumber2;
-    	            char[] mobNumberSecond = phoneNumberSecond.toCharArray();
-
-    	            /* Enter second different random phone number */
-    	            for (int i = 0; i < 10; i++) {
-    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + mobNumberSecond[i] + "']")).click();
-    	            }
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
-
-    	            for (int k = 0; k < 4; k++) {
-    	                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='" + otp[k] + "']")).click();
-    	            }
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
-    	            System.out.println("Alternative number edited");
-    	            Thread.sleep(3000);
-    	            
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Remove']")).click();
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove It']")).click();
-    	            System.out.println("Alternative number removed");
-
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Personal Details']/../android.widget.ImageView")).click();
-    	            driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Home']")).click();
-    	        }
-    	    } catch (NoSuchElementException e) {
-    	        System.out.println("Alternative number already added");
-    	    }
-    	    return;
-    	}
     	
     	else if (("Writing user reason".equals(state))) {
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.S));
@@ -648,6 +592,9 @@ public class AutomationFlow extends BaseClass {
         {
 	        /* Function for checking scroll in choose language screen in driver */
 	        languageScroll(screen);
+	        
+	        /* Function for checking alternate mobile number validation for driver */
+	        if(state.contains("Alternate Number")){alternateMobileNumberValidation(state, xpath);return;}
         }
         
 
@@ -828,6 +775,62 @@ public class AutomationFlow extends BaseClass {
     	return;
     }
     
+    public void customizedKeyboardAction(String xpath, int interation, char[] number){
+        for (int i = 0; i < interation; i++) {
+            driver.findElement(AppiumBy.xpath(xpath + number[i] + ("']"))).click();
+            System.out.println(xpath + number[i] + ("']"));
+        }
+        driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
+    }
+    
+    private char[] generateNewMobNumber() {
+        long randomNumber2 = (long) (Math.random() * 900000000L) + 100000000L;
+            String phoneNumber2 = Long.toString(randomNumber2);
+            String phoneNumberSecond = "9" + phoneNumber2;
+            return phoneNumberSecond.toCharArray();
+    }
+    
+    public void alternateMobileNumberValidation(String state, String xpath) throws IOException  {
+    	if ("Check Alternate Number in Homescreen".equals(state)) {
+    	    try {
+    	        if (driver.findElement(AppiumBy.xpath(xpath)).isDisplayed()) {
+                    System.out.println("Is Displayed");
+                    driver.findElement(AppiumBy.xpath(xpath)).click();
+    	        }
+    	    }
+    	    catch (NoSuchElementException e) {
+                System.out.println("Alternative number already added");
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Offline']/../../../../android.widget.LinearLayout[1]")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[1]")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Remove']")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove It']")).click();
+                driver.findElement(AppiumBy.xpath(xpath)).click();
+                return;
+    	    }
+    	}
+        else if(state.contains("Add Alternate Number")){
+            // Enter the first random phone number
+            if(state.contains("1")){
+                firstAltNumber = generateNewMobNumber();
+                customizedKeyboardAction(xpath, 10, firstAltNumber);
+                // Enter the wrong OTP
+                char[] wrongOtp = {'7', '8', '9', '5'};
+                // Enter the wrong OTP digit by digit
+                customizedKeyboardAction(xpath, 4, wrongOtp);
+                // Enter the correct OTP
+                char[] correctOtp = {'7', '8', '9', '1'};
+                // Enter the correct OTP digit by digit
+                customizedKeyboardAction(xpath, 4, correctOtp);
+            }
+            else if(state.contains("2")){
+                customizedKeyboardAction(xpath, 10, firstAltNumber);
+            }
+        }
+        return;
+    	
+    }
+    
+    
     /* When the build is failed 
      * Attaching UI errors, API errors, screenshots, logs and the screen wise status */
     public static void logErrorToAllureReport(String errorMessage, WebDriver driver, WebDriver user, Map<String, String> screenStatusMap) throws IOException {
@@ -994,7 +997,8 @@ public class AutomationFlow extends BaseClass {
         }
         return reportUrl;
     }
-
+    
+    
     /* Method is executed after the test suite finishes and quits the WebDriver instances for both user and driver */
     @AfterSuite
     public void tearDown() throws IOException {
