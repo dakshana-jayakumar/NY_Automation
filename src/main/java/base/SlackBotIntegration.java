@@ -26,8 +26,8 @@ import java.util.concurrent.TimeoutException;
 
 public class SlackBotIntegration {
 
-    public static final String BOT_TOKEN = "xoxb-4816210052547-5205411759971-hsSkgE5cWlwNkr9W4rUFHrFF";
-    public static String SLACK_SIGNING_SECRET = "257dc74149c92c5f38311957f9213f3e";
+    public static final String BOT_TOKEN = "";
+    public static String SLACK_SIGNING_SECRET = "";
     public static String UPLOAD_CUSTOMER = "/customer_apk_file";
     public static String UPLOAD_DRIVER = "/driver_apk_file";
     public static String CUSTOMER_FILE = "/Customer/customer.apk";
