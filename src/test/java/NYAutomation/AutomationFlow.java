@@ -210,7 +210,7 @@ public class AutomationFlow extends BaseClass {
         
     	else if ("Select Namma Yatri Partner".equals(state)) {
             /* If the state is "Select Namma Yatri Partner"*/
-            /* Call the checkLocationPermission method to perform action */
+            /* Call the checkOverlayPermission method to perform action */
             boolean doAction = checkOverlayPermission();
             if(!doAction) {return;}
         }
@@ -252,13 +252,38 @@ public class AutomationFlow extends BaseClass {
         }
 
         else if ("Scroll Function".equals(state)) {
-        	boolean canScrollMore = (Boolean)user.executeScript("mobile: scrollGesture", ImmutableMap.of(
-    				"left", 100, "top", 100, "width", 1200, "height", 1200,
-    				"direction", "down",
-    				"percent", 3.0
-    				));
-        	Thread.sleep(3000);
-        	return;
+        	int androidVersion = Integer.parseInt(androidVersions.get(UserDeviceIndex));
+        	By buttonLayoutLocator = By.xpath(xpath);
+            WebElement source = user.findElement(buttonLayoutLocator);
+        	if (androidVersion == 9 || androidVersion == 10 || androidVersion == 11 || androidVersion == 12 || androidVersion == 13) {
+        		boolean canScrollMore = (Boolean)user.executeScript("mobile: scrollGesture", ImmutableMap.of(
+        				"left", 100, "top", 100, "width", 1200, "height", 1200,
+        				"direction", "down",
+        				"percent", 3.0
+        				));
+            	Thread.sleep(3000);
+            	return;
+        	}
+        	else {
+        		// Duration of the drag gesture in milliseconds
+        		int durationInMillis = 3000;
+                int startX = source.getLocation().getX();
+                int startY = source.getLocation().getY();
+                int endX = startX + 500; // Drag the element horizontally by 500 pixels
+                int endY = startY;
+
+                long startTime = System.currentTimeMillis();
+
+                while (System.currentTimeMillis() - startTime <= durationInMillis) {
+                    TouchAction<?> touchAction = new TouchAction<>(user);
+                    touchAction.press(PointOption.point(startX, startY))
+                        .waitAction(WaitOptions.waitOptions(Duration.ofMillis(1000)))
+                        .moveTo(PointOption.point(endX, endY))
+                        .release()
+                        .perform();
+                }
+                return;
+            }
         }
 
         else if (("Fetch Otp").equals(state)) {
