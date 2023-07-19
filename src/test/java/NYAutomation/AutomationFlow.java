@@ -32,8 +32,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.File;
-import java.util.Scanner;
+
 import java.time.Duration;
+import java.text.SimpleDateFormat;
+
+import java.util.Date;
+import java.util.Scanner;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +63,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Test;
 
-import static base.ADBDeviceFetcher.resolutions;
 
 
 public class AutomationFlow extends BaseClass {
@@ -68,7 +71,7 @@ public class AutomationFlow extends BaseClass {
 
     static Map<String, String> screenStatusMap = new HashMap<>();
 
-	private final String userMobileNumber = "7777777714";
+	private final String userMobileNumber = "7777777721";
 	private final String driverMobileNumber = "9999999920";
     private static boolean ReportFlag = true;
     private static char[] firstAltNumber;
@@ -88,7 +91,11 @@ public class AutomationFlow extends BaseClass {
         String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
         boolean userFlag = true;
         boolean driverFlag = true;
+        boolean isUser = false;
         LogcatToFile.CaptureLogs();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        long prevTimeStamp = 0;
 
         for (String[] actionParameter : testData) {
             String testCase = actionParameter[0];
@@ -96,8 +103,18 @@ public class AutomationFlow extends BaseClass {
             String state = actionParameter[2];
             String xpath = actionParameter[3];
             String sendKeysValue = actionParameter[4];
-            boolean isUser = "user".equals(actionParameter[5]);
+            isUser = "user".equals(actionParameter[5]);
             String whichApp = actionParameter[5];
+           
+            // Get the timestamp of the action
+            String timeStamp = dateFormat.format(new Date());
+            // Get the epoch timestamp of the current action
+            long currentTimeStamp = System.currentTimeMillis();
+            // Calculate the time difference for the current action
+            long timeDifference = prevTimeStamp == 0 ? 0 : currentTimeStamp - prevTimeStamp;
+            prevTimeStamp = currentTimeStamp; // Update the previous timestamp for the next iteration
+            // Convert the time difference to "X m Y s Z ms" format
+            String formattedTimeDifference = formatTimeDifference(timeDifference);
 
             if (userFlag && isUser) {
                 userFlag = false;
@@ -106,23 +123,46 @@ public class AutomationFlow extends BaseClass {
                 driverFlag = false;
                 setup(isUser);
             }
-            System.out.println("screen: " + screen + " | state: " + state + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
+            System.out.println("EpochTime: " + currentTimeStamp + " | ActionTime: " + formattedTimeDifference + " | screen: " + screen + " | state: " + state + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
             try {
             	checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
-            	screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Passed");
+            	screenStatusMap.put(currentTimeStamp + "|" + formattedTimeDifference + "|" + whichApp + "|" + testCase + "|" + screen + "|" + state, "Passed");
             }
             catch (Exception e) {
                 LogcatToFile.searchApiErr(isUser);
                 LogcatToFile.searchJavaScriptError(isUser);
                 addDeviceConfigToReport();
-                screenStatusMap.put(whichApp + ":" + testCase + ":" + screen + ":" + state, "Failed");
+                LogcatToFile.fetchAppDetails(isUser);
+                screenStatusMap.put(currentTimeStamp + "|" + formattedTimeDifference + "|" + whichApp + "|" + testCase + "|" + screen + "|" + state, "Failed");
             	logErrorToAllureReport(e.getMessage(), driver, user, screenStatusMap);
                 // Thread.sleep(3000);
                 throw e;
             }
         }
         addDeviceConfigToReport();
+        LogcatToFile.fetchAppDetails(isUser);
         logPassToAllureReport("Build Passed!", driver, user, screenStatusMap);
+    }
+    
+    // Method to format time difference as "X m Y s Z ms"
+    public String formatTimeDifference(long timeDifference) {
+        long milliseconds = timeDifference % 1000;
+        timeDifference /= 1000;
+        long seconds = timeDifference % 60;
+        timeDifference /= 60;
+        long minutes = timeDifference % 60;
+
+        StringBuilder formattedTime = new StringBuilder();
+        if (minutes > 0) {
+            formattedTime.append(minutes).append("m ");
+        }
+        if (seconds > 0) {
+            formattedTime.append(seconds).append("s ");
+        }
+        if (milliseconds > 0) {
+            formattedTime.append(milliseconds).append("ms");
+        }
+        return formattedTime.toString().trim();
     }
 
     private void addDeviceConfigToReport() {
@@ -433,10 +473,32 @@ public class AutomationFlow extends BaseClass {
         	Thread.sleep(4000);
         	return;
         }
+
+        else if ("Book Ride Check".equals(state)) {
+            try {
+                System.out.println("inside if");
+                WebElement bookRideElement = user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Book Ride']"));
+                if (bookRideElement.isDisplayed()) {
+                    System.out.println("Is Displayed");
+                    bookRideElement.click();
+                } else {
+                    System.out.println("inside else");
+                }
+                return;
+            } catch (Exception e) {
+                // Handle the exception
+                System.out.println("An exception occurred: " + e.getMessage());
+                return;
+            }  
+        }
+    	
         else if ("Back Pressing".equals(state)) {
+        	Thread.sleep(6000);
         	user.pressKey(new KeyEvent(AndroidKey.BACK));
+        	Thread.sleep(6000);
         	return;
         }
+    	
         else if ("Click Fav".equals(state)) {
         	user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='All Favourites']")).click();
             List<WebElement> favList = user.findElements(AppiumBy.xpath("//android.widget.TextView[@text='Select Favourite']/../../android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView"));
@@ -451,6 +513,7 @@ public class AutomationFlow extends BaseClass {
             System.out.println("Case_3_All_Favourites_Executed");
             return;
         }
+    	
         else if ("Click Dest Fav".equals(state)) {
         	user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='All Favourites']")).click();
             List<WebElement> favList = user.findElements(AppiumBy.xpath("//android.widget.TextView[@text='Select Favourite']/../../android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView"));
@@ -467,6 +530,7 @@ public class AutomationFlow extends BaseClass {
             System.out.println("Case_3_All_Favourites_Executed");
             return;
         }
+    	
         else if ("Dest Auto Suggestion".equals(state)) {
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.U));
             ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.L));
@@ -475,6 +539,7 @@ public class AutomationFlow extends BaseClass {
             ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
             return;
         }
+    	
         else if ("Source Auto Suggestion".equals(state)) {
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.M));
             ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
@@ -504,6 +569,7 @@ public class AutomationFlow extends BaseClass {
         	
         	return;
         }
+    	
         else if ("Driver Login OTP".equals(state)) {
     		driver.findElement(AppiumBy.xpath("//android.widget.EditText[@text='Auto Reading OTP...']")).click();
             
@@ -608,8 +674,8 @@ public class AutomationFlow extends BaseClass {
     public Wait<AndroidDriver> waitTime(boolean isUser) {
     	/* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(100))
-                .pollingEvery(Duration.ofMillis(1000))
+                .withTimeout(Duration.ofSeconds(60))
+                .pollingEvery(Duration.ofMillis(3000))
                 .ignoring(Exception.class);
 		return wait;
     }
@@ -835,52 +901,62 @@ public class AutomationFlow extends BaseClass {
      * Attaching UI errors, API errors, screenshots, logs and the screen wise status */
     public static void logErrorToAllureReport(String errorMessage, WebDriver driver, WebDriver user, Map<String, String> screenStatusMap) throws IOException {
         ReportFlag = !ReportFlag;
-        if(ReportFlag){
+        if (ReportFlag) {
             return;
         }
         Allure.addAttachment("Error Message", errorMessage);
-        
+
         StringBuilder screensInfo = new StringBuilder();
         /* Determine the maximum lengths of the columns for alignment */
         int maxIsUserLength = 0;
         int maxTestCaseLength = 0;
         int maxScreenLength = 0;
         int maxStateLength = 0;
-
-        /* Using TreeMap for sorting based on testCase */
+        int maxEpochTimeLength = 0;
+        int maxActionTimeLength = 0;
+        // Using TreeMap for sorting based on testCase
         Map<String, String> sortedMap = new TreeMap<>(screenStatusMap);
 
         for (Map.Entry<String, String> entry : sortedMap.entrySet()) {
             String key = entry.getKey();
-            String isUser = key.split(":")[0];
-            String testCase = key.split(":")[1];
-            String screen = key.split(":")[2];
-            String state = key.split(":")[3];
+            String status = entry.getValue();
+            String[] keyParts = key.split("\\|");
+            String epochTime = keyParts[0];
+            String actionTime = keyParts[1];
+            String whichApp = keyParts[2];
+            String testCase = keyParts[3];
+            String screen = keyParts[4];
+            String state = keyParts[5];
 
-            maxIsUserLength = Math.max(maxIsUserLength, isUser.length());
+            maxIsUserLength = Math.max(maxIsUserLength, whichApp.length());
             maxTestCaseLength = Math.max(maxTestCaseLength, testCase.length());
             maxScreenLength = Math.max(maxScreenLength, screen.length());
             maxStateLength = Math.max(maxStateLength, state.length());
+            maxEpochTimeLength = Math.max(maxEpochTimeLength, epochTime.length());
+            maxActionTimeLength = Math.max(maxActionTimeLength, String.valueOf(actionTime).length());
         }
 
         /* Build the table format */
-        String format = "%-" + (maxIsUserLength + 3) + "s%-" + (maxTestCaseLength + 3) + "s%-" +
-                (maxScreenLength + 3) + "s%-" + (maxStateLength + 3) + "s%s%n";
+        String format = "%-" + (maxEpochTimeLength + 3) + "s%-" + (maxActionTimeLength + 4) + "s%-" +
+                (maxIsUserLength + 5) + "s%-" + (maxTestCaseLength + 3) + "s%-" + (maxScreenLength + 3) + "s%-" + (maxStateLength + 3) + "s%s%n";
 
         /* Add the table header */
-        String header = String.format(format, "APP TYPE", " TEST CASES", " SCREEN", " STATE", " STATUS");
+        String header = String.format(format, "TIME STAMP", "TIME TAKEN", "APPTYPE", "TESTCASES", "SCREEN", "STATE", "STATUS");
         screensInfo.append(header);
 
         /* Add the table rows */
         for (Map.Entry<String, String> entry : sortedMap.entrySet()) {
             String key = entry.getKey();
             String status = entry.getValue();
-            String whichApp = key.split(":")[0];
-            String testCase = key.split(":")[1];
-            String screen = key.split(":")[2];
-            String state = key.split(":")[3];
+            String[] keyParts = key.split("\\|");
+            String epochTime = keyParts[0];
+            String actionTime = keyParts[1];
+            String whichApp = keyParts[2];
+            String testCase = keyParts[3];
+            String screen = keyParts[4];
+            String state = keyParts[5];
 
-            String row = String.format(format, whichApp, testCase, screen, state, status);
+            String row = String.format(format, epochTime, actionTime, whichApp, testCase, screen, state, status);
             screensInfo.append(row);
         }
         /* Print or use the screensInfo StringBuilder as desired */
@@ -899,9 +975,7 @@ public class AutomationFlow extends BaseClass {
             String message = "User application is not initialized for testing";
             Allure.addAttachment("User App Screenshot", message);
         }
-        
         Allure.getLifecycle().updateTestCase(testResult -> testResult.setStatus(Status.FAILED));
-        
     }
     
     /* When the build is passed 
@@ -915,41 +989,51 @@ public class AutomationFlow extends BaseClass {
         int maxTestCaseLength = 0;
         int maxScreenLength = 0;
         int maxStateLength = 0;
-
+        int maxEpochTimeLength = 0;
+        int maxActionTimeLength = 0;
         // Using TreeMap for sorting based on testCase
         Map<String, String> sortedMap = new TreeMap<>(screenStatusMap);
 
         for (Map.Entry<String, String> entry : sortedMap.entrySet()) {
             String key = entry.getKey();
-            String isUser = key.split(":")[0];
-            String testCase = key.split(":")[1];
-            String screen = key.split(":")[2];
-            String state = key.split(":")[3];
+            String status = entry.getValue();
+            String[] keyParts = key.split("\\|");
+            String epochTime = keyParts[0];
+            String actionTime = keyParts[1];
+            String whichApp = keyParts[2];
+            String testCase = keyParts[3];
+            String screen = keyParts[4];
+            String state = keyParts[5];
 
-            maxIsUserLength = Math.max(maxIsUserLength, isUser.length());
+            maxIsUserLength = Math.max(maxIsUserLength, whichApp.length());
             maxTestCaseLength = Math.max(maxTestCaseLength, testCase.length());
             maxScreenLength = Math.max(maxScreenLength, screen.length());
             maxStateLength = Math.max(maxStateLength, state.length());
+            maxEpochTimeLength = Math.max(maxEpochTimeLength, epochTime.length());
+            maxActionTimeLength = Math.max(maxActionTimeLength, String.valueOf(actionTime).length());
         }
 
         /* Build the table format */
-        String format = "%-" + (maxIsUserLength + 3) + "s%-" + (maxTestCaseLength + 3) + "s%-" +
-                (maxScreenLength + 3) + "s%-" + (maxStateLength + 3) + "s%s%n";
+        String format = "%-" + (maxEpochTimeLength + 3) + "s%-" + (maxActionTimeLength + 4) + "s%-" +
+                (maxIsUserLength + 5) + "s%-" + (maxTestCaseLength + 3) + "s%-" + (maxScreenLength + 3) + "s%-" + (maxStateLength + 3) + "s%s%n";
 
         /* Add the table header */
-        String header = String.format(format, "APP TYPE ", " TEST CASES ", " SCREEN ", " STATE ", " STATUS ");
+        String header = String.format(format, "TIME STAMP", "TIME TAKEN", "APPTYPE", "TESTCASES", "SCREEN", "STATE", "STATUS");
         screensInfo.append(header);
 
         /* Add the table rows */
         for (Map.Entry<String, String> entry : sortedMap.entrySet()) {
             String key = entry.getKey();
             String status = entry.getValue();
-            String whichApp = key.split(":")[0];
-            String testCase = key.split(":")[1];
-            String screen = key.split(":")[2];
-            String state = key.split(":")[3];
+            String[] keyParts = key.split("\\|");
+            String epochTime = keyParts[0];
+            String actionTime = keyParts[1];
+            String whichApp = keyParts[2];
+            String testCase = keyParts[3];
+            String screen = keyParts[4];
+            String state = keyParts[5];
 
-            String row = String.format(format, whichApp, testCase, screen, state, status);
+            String row = String.format(format, epochTime, actionTime, whichApp, testCase, screen, state, status);
             screensInfo.append(row);
         }
         /* Print or use the screensInfo StringBuilder as desired */

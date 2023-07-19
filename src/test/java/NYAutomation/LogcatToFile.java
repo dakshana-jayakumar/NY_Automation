@@ -4,16 +4,26 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 import base.ADBDeviceFetcher;
 import static base.ADBDeviceFetcher.devices;
 import static base.BaseClass.DriverDeviceIndex;
 import static base.BaseClass.UserDeviceIndex;
+import static base.BaseClass.version;
+import static base.BaseClass.appPath;
+import static base.BaseClass.userApkName;
+import static base.BaseClass.driverApkName;
+
 import io.qameta.allure.Allure;
 
 public class LogcatToFile {
@@ -174,4 +184,127 @@ public class LogcatToFile {
             }
         }
     }
+
+    public static void fetchAppDetails(boolean isUser) {
+        String deviceSerialNumber;
+        String apkName = null;
+        String bundleVersion = null;
+        
+        for (int i = 0; i < devices.size(); i++) {
+            deviceSerialNumber = devices.get(i);
+            String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator
+                + "logFile_" + deviceSerialNumber + ".txt";
+            boolean bundleVersionFound = false;
+            String appDetails = "";
+          
+            try (BufferedReader reader = new BufferedReader(new FileReader(readLogCatFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains(" D SdkTracker: ")) {
+                        // Extract the JSON string from the log message.
+                        String jsonString = extractJSONStringFromLogLine(line);
+                        if (jsonString != null) {
+                            // Parse the JSON string into a JSONObject.
+                            JSONObject jsonObject = new JSONObject(jsonString);
+                            // Extract the "bundle_version" from the JSONObject.
+                            bundleVersion = jsonObject.optString("bundle_version");
+                            // Check if "bundle_version" has a value.
+                            if (!bundleVersion.isEmpty()) {
+                                // Set the flag to true to stop looping
+                                bundleVersionFound = true;
+                                break;
+                            }
+                        } else {
+                            System.out.println("JSON object not found in the log line.");
+                        }
+                    }
+                }
+
+                if (i == UserDeviceIndex) {
+                    apkName = userApkName;
+                    String fetchVersion = appPath + apkName;
+                    
+                    Map<String, String> versions = fetchAndroidAppVersions(fetchVersion);
+                    String appVersion = "App Version='";
+                    String versionCheck = versions.get(fetchVersion);
+                    version = appVersion + versionCheck;
+                    System.out.println("APK Name -> " + apkName);
+                    System.out.println("Version Details" + version);
+
+                    // If the "bundle_version" is not found after looping through all the lines
+                    if (!bundleVersionFound) {
+                        System.out.println("Bundle Version not found for " + apkName);
+                    }
+                    appDetails = "APK name : " + apkName + "\nVersion : " + version;
+                    if (bundleVersion != null) {
+                        appDetails += "\nBundle Version : " + bundleVersion;
+                    }
+                } else if (i == DriverDeviceIndex) {
+                    apkName = driverApkName;
+                    String fetchVersion = appPath + apkName;
+                    Map<String, String> versions = fetchAndroidAppVersions(fetchVersion);
+                    String appVersion = "App Version='";
+                    String versionCheck = versions.get(fetchVersion);
+                    version = appVersion + versionCheck;
+                    System.out.println("APK Name -> " + apkName);
+                    System.out.println("Version Details" + version);
+
+                    appDetails = "APK name : " + apkName + "\nVersion : " + version;
+                    if (bundleVersion != null) {
+                        appDetails += "\nBundle Version : " + bundleVersion;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("App Details:\n" + appDetails);
+
+            // Add app details as an attachment to Allure report.
+            if (i == UserDeviceIndex) {
+            	Allure.addAttachment("User App Version Details", appDetails);
+            }
+            else if(i == DriverDeviceIndex) {
+            	Allure.addAttachment("Driver App Version Details", appDetails);
+            }
+        }
+    }
+
+    private static String extractJSONStringFromLogLine(String logLine) {
+        int jsonStartIndex = logLine.indexOf("{");
+        int jsonEndIndex = logLine.lastIndexOf("}");
+
+        if (jsonStartIndex >= 0 && jsonEndIndex > jsonStartIndex) {
+            return logLine.substring(jsonStartIndex, jsonEndIndex + 1);
+        }
+
+        return null;
+    }
+    
+    public static  Map<String, String> fetchAndroidAppVersions(String appFilePath) {
+        Map<String, String> versions = new HashMap<>();
+        
+            try {
+                String aaptPath = "/Users/dakshana.j/Library/Android/sdk/build-tools/32.1.0-rc1/aapt";
+                // Execute the ‘aapt’ command to extract the version information
+                Process process = Runtime.getRuntime().exec(aaptPath + " dump badging " + appFilePath + " | grep Version");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                // Read the output of the command
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Extract the version information using regular expressions
+                    Pattern pattern = Pattern.compile("versionName='([^‘]+)'");
+                    Matcher matcher = pattern.matcher(line);
+
+                    if (matcher.find()) {
+                        versions.put(appFilePath, matcher.group(1));
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        return versions;
+    }
+
 }
