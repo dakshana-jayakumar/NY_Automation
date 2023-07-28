@@ -65,15 +65,12 @@ import org.openqa.selenium.NoSuchElementException;
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 
-
-
 import java.io.FileOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import java.io.FileInputStream;
 
 import okhttp3.*;
-
 
 
 public class AutomationFlow extends BaseClass {
@@ -107,16 +104,20 @@ public class AutomationFlow extends BaseClass {
     
     public void flow() throws Exception {
 		/* Add Allure report cleanup code here */
-//    	System.out.print("Do you want to delete the files in the Allure report directory? (yes/no): ");
     	String confirmation = System.getProperty("confirmation");
-    	cleanupAllureReport(confirmation);
+    	String[] directoryPaths = {
+    			 	System.getProperty("user.dir") + File.separator + "allure-results",
+    			 	System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+    	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "ScreenRecordings"
+    	    	};
+    	cleanupAllureReport(confirmation, directoryPaths);
     	
     	/* Fetch test data from Google Sheet */
         TestDataReader.fetchTabNames();
         ADBDeviceFetcher.fetchAdbDeviceProperties();
         String[][] testData = TestDataReader.testData.toArray(new String[0][0]);
         LogcatToFile.CaptureLogs();
-        
+        // SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
         prevTimeStamp = System.currentTimeMillis();
 
         for (String[] actionParameter : testData) {
@@ -126,7 +127,7 @@ public class AutomationFlow extends BaseClass {
             String xpath = actionParameter[3];
             String sendKeysValue = actionParameter[4];
             isUser = "user".equals(actionParameter[5]);
-            String whichApp = actionParameter[5];
+            String whichApp = actionParameter[5]; 
 
             if ((userFlag && isUser)) {
                 userFlag = false;
@@ -138,6 +139,7 @@ public class AutomationFlow extends BaseClass {
             }
 
             System.out.println("EpochTime: " + currentTimeStamp + " | ActionTime: " + formattedTimeDifference + " | screen: " + screen + " | state: " + state + " | XPath: " + xpath + " | SendKeys Value: " + sendKeysValue);
+            
             try {
             	checkCase(testCase, screen, state, xpath, sendKeysValue, isUser);
             	screenStatusMap.put(currentTimeStamp + "|" + formattedTimeDifference + "|" + whichApp + "|" + testCase + "|" + screen + "|" + state, "Passed");
@@ -150,8 +152,8 @@ public class AutomationFlow extends BaseClass {
         }
         logPassToAllureReport("Build Passed!", driver, user, screenStatusMap);
     }
-
-
+    
+    
     // Method to format time difference as "X m Y s Z ms"
     public String formatTimeDifference(long timeDifference) {
         long milliseconds = timeDifference % 1000;
@@ -187,56 +189,51 @@ public class AutomationFlow extends BaseClass {
         }
         Allure.addAttachment("Devices Config", devicesConfig.toString());
     }
+   
+    
+    private void cleanupAllureReport(String confirmation, String[] directoryPaths) {
+        for (String reportDirectoryPath : directoryPaths) {
+            // Create a File object for the directory
+            File reportDirectory = new File(reportDirectoryPath);
 
-    private void cleanupAllureReport(String confirmation) {
-        // Specify the directory path where the Allure report files are located
-        String reportDirectoryPath = System.getProperty("user.dir") + File.separator + "allure-results";
+            // Check if the directory exists
+            if (reportDirectory.exists() && reportDirectory.isDirectory()) {
+                // Check user confirmation
+                if (confirmation.equalsIgnoreCase("yes")) {
+                    // Get all files in the directory
+                    File[] files = reportDirectory.listFiles();
 
-        // Create a File object for the directory
-        File reportDirectory = new File(reportDirectoryPath);
+                    // Iterate through each file
+                    if (files != null) {
+                        for (File file : files) {
+                            // Check if the file is a regular file (not a directory)
+                            if (file.isFile()) {
+                                // Delete the file
+                                boolean deleted = file.delete();
 
-        // Check if the directory exists
-        if (reportDirectory.exists() && reportDirectory.isDirectory()) {
-        // Read user input
-
-            Scanner scanner = new Scanner(System.in);
-
-            System.out.print("Do you want to delete the files in the Allure report directory? (yes/no): ");
-            String deleteReportFilesInput = scanner.nextLine();
-            // Check user response
-            if (deleteReportFilesInput.equalsIgnoreCase("yes")) {
-                // Get all files in the directory
-                File[] files = reportDirectory.listFiles();
-
-                // Iterate through each file
-                if (files != null) {
-                    for (File file : files) {
-                        // Check if the file is a regular file (not a directory)
-                        if (file.isFile()) {
-                            // Delete the file
-                            boolean deleted = file.delete();
-
-                            // Check if the file deletion was successful
-                            if (deleted) {
-                                System.out.println("Deleted file: " + file.getName());
-                            } else {
-                                System.out.println("Failed to delete file: " + file.getName());
+                                // Check if the file deletion was successful
+                                if (deleted) {
+                                    System.out.println("Deleted file: " + file.getName());
+                                } else {
+                                    System.out.println("Failed to delete file: " + file.getName());
+                                }
                             }
                         }
                     }
-                }
 
-                System.out.println("Allure report files have been deleted.");
+                    System.out.println("Allure report files in directory " + reportDirectoryPath + " have been deleted.");
+                } else {
+                    System.out.println("Allure report files in directory " + reportDirectoryPath + " will not be deleted.");
+                }
             } else {
-                System.out.println("Allure report files will not be deleted.");
+                System.out.println("Allure report directory " + reportDirectoryPath + " does not exist or is not a directory.");
             }
-        } else {
-            System.out.println("Allure report directory does not exist or is not a directory.");
         }
     }
     
+    
     /* method used to code all the types of functions to be handled */
-    public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws Exception {
+    public void checkCase(String testCase, String screen, String state, String xpath, String sendKeysValue, boolean isUser) throws InterruptedException, IOException {
     	/* Variable to store wait */
     	Wait<AndroidDriver> wait = waitTime(isUser);
 
@@ -675,7 +672,8 @@ public class AutomationFlow extends BaseClass {
                 return;
     	    }
     	}
-        
+    	
+    	
          /* Function calls for both Customer and Driver */   
         {
 	        /* Function call to validate the mobile number and otp is entered correct */
@@ -692,7 +690,9 @@ public class AutomationFlow extends BaseClass {
 	        languageScroll(screen, state);
 	        
 	        /* Function for checking alternate mobile number validation for driver */
-	        if(state.contains("Alternate Number")){alternateMobileNumberValidation(state, xpath);return;}
+	        if(state.contains("Alternate Number")){alternateMobileNumberValidation(state, xpath);
+	        return;
+	        }
         }
         
         
@@ -712,6 +712,7 @@ public class AutomationFlow extends BaseClass {
         return wait;
     }
 
+    
     /**
     * Performs the action based on the provided parameters.
     *
@@ -719,7 +720,6 @@ public class AutomationFlow extends BaseClass {
     * @param buttonLayoutLocator Locator for the button layout
     * @param sendKeysValue  Value to be sent as keys (if not empty)
     **/
-
     public void performAction(Wait<AndroidDriver> wait, By buttonLayoutLocator, String sendKeysValue) {
         currentTimeStamp = System.currentTimeMillis();
         long timeDifference = currentTimeStamp - prevTimeStamp;
@@ -733,6 +733,7 @@ public class AutomationFlow extends BaseClass {
             wait.until(ExpectedConditions.elementToBeClickable(buttonLayoutLocator)).click();
         }
     }
+    
     
     public void scrollToText(String text) {
         /* Scrolls to the specified text */
@@ -749,6 +750,7 @@ public class AutomationFlow extends BaseClass {
 	    }
 	}
 	
+	
 	private String checkBatteryPermission(String modifiedXpath) {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
 	    if ("google".equals(brandNames.get(driverDeviceIndex)) || ("Android".equals(brandNames.get(driverDeviceIndex)) || ("samsung".equals(brandNames.get(driverDeviceIndex))) || ("vivo".equals(brandNames.get(driverDeviceIndex))) || ("OPPO".equals(brandNames.get(driverDeviceIndex)) || ("iQOO".equals(brandNames.get(driverDeviceIndex)) || ("Realme".equals(brandNames.get(driverDeviceIndex)) || ("realme".equals(brandNames.get(driverDeviceIndex)) || ("OnePlus".equals(brandNames.get(driverDeviceIndex)) || ("Redmi".equals(brandNames.get(driverDeviceIndex)))))))))) {
@@ -759,6 +761,7 @@ public class AutomationFlow extends BaseClass {
         }
         return modifiedXpath;
 	}
+	
 	
 	private boolean checkOverlayPermission() {
 	    int androidVersion = Integer.parseInt(androidVersions.get(driverDeviceIndex));
@@ -771,11 +774,13 @@ public class AutomationFlow extends BaseClass {
         return true;
 	}
    
+	
 	private boolean checkAutoStartPermission() {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
 	    return (brandNames.get(driverDeviceIndex).equals("google") || brandNames.get(driverDeviceIndex).equals("Android") || brandNames.get(driverDeviceIndex).equals("vivo") || brandNames.get(driverDeviceIndex).equals("samsung") || brandNames.get(driverDeviceIndex).equals("OPPO") || brandNames.get(driverDeviceIndex).equals("iQOO") || brandNames.get(driverDeviceIndex).equals("Realme") || brandNames.get(driverDeviceIndex).equals("realme") || brandNames.get(driverDeviceIndex).equals("OnePlus") || brandNames.get(driverDeviceIndex).equals("Redmi"));
 	}
     
+	
     public void validateMobileNumberAndOtp(String state, String sendKeysValue, String screen, WebDriver driver) throws InterruptedException, IOException {
         /* Validating the length and mobile number entered is correct or not */
         if ("Enter Mobile Number".equals(state)) {
@@ -796,12 +801,14 @@ public class AutomationFlow extends BaseClass {
         }
 	}
     
+    
     public void languageScroll(String screen, String state) {
     	/* if any specific cases have to be performed */
         if ("Choose Language".equals(screen) && ("Kannada".equals(state)) && !"Update Language".equals(screen) && !("1080x2400".equals(resolutions.get(driverDeviceIndex)))) {
             scrollToText("Tamil");
         }
     }
+    
     
     public void cancelRide(String state, String xpath) throws InterruptedException {
     	if ("Draging bottom layout user".equals(state)) {
@@ -848,7 +855,7 @@ public class AutomationFlow extends BaseClass {
     	        ));
     	        Thread.sleep(2000);
     	    }
-    	}	
+    	}   
     	
         else if ("Hamburger Click".equals(state)) {
         	Thread.sleep(7000);
@@ -872,6 +879,7 @@ public class AutomationFlow extends BaseClass {
     	return;
     }
     
+    
     public void customizedKeyboardAction(String xpath, int interation, char[] number){
         for (int i = 0; i < interation; i++) {
             driver.findElement(AppiumBy.xpath(xpath + number[i] + ("']"))).click();
@@ -879,6 +887,7 @@ public class AutomationFlow extends BaseClass {
         }
         driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
     }
+    
     
     private char[] generateNewMobNumber() {
         long randomNumber2 = (long) (Math.random() * 900000000L) + 100000000L;
@@ -905,6 +914,7 @@ public class AutomationFlow extends BaseClass {
                 return;
     	    }
     	}
+    	
         else if(state.contains("Add Alternate Number")){
             // Enter the first random phone number
             if(state.contains("1")){
@@ -1013,6 +1023,7 @@ public class AutomationFlow extends BaseClass {
         LogcatToFile.fetchExceptions();
     }
     
+    
     /* When the build is passed 
      * Attaching the success message and the screen wise status */
     public void logPassToAllureReport(String successMessage, WebDriver driver, WebDriver user, Map<String, String> screenStatusMap) throws IOException {
@@ -1053,7 +1064,7 @@ public class AutomationFlow extends BaseClass {
                 (maxIsUserLength + 5) + "s%-" + (maxTestCaseLength + 3) + "s%-" + (maxScreenLength + 3) + "s%-" + (maxStateLength + 3) + "s%s%n";
 
         /* Add the table header */
-        String header = String.format(format, "TIME STAMP", "TIME TAKEN", "APPTYPE", "TESTCASES", "SCREEN", "STATE", "STATUS");
+        String header = String.format(format, "TIME STAMP", "TIME TAKEN", "APPTYPE", "TESTCASES", "SCREEN", "CLICK", "STATUS");
         screensInfo.append(header);
 
         /* Add the table rows */
@@ -1083,6 +1094,7 @@ public class AutomationFlow extends BaseClass {
         LogcatToFile.fetchExceptions();
     }
 
+    
     public static void zipAllureReportFolder(String sourceFolderPath, String zipFilePath) {
         try {
             FileOutputStream fos = new FileOutputStream(zipFilePath);
@@ -1100,6 +1112,7 @@ public class AutomationFlow extends BaseClass {
         }
     }
 
+    
     private static void addFolderToZip(File folder, String parentFolderName, ZipOutputStream zos) throws IOException {
         for (File file : folder.listFiles()) {
             if (file.isDirectory()) {
@@ -1117,6 +1130,7 @@ public class AutomationFlow extends BaseClass {
             }
         }
     }
+    
     
     public static void sendZipToSlack(String zipFilePath, String message) {
         try {
@@ -1149,9 +1163,9 @@ public class AutomationFlow extends BaseClass {
             e.printStackTrace();
         }
     }
-
-
-    public void stopScreenRecording() {
+    
+	
+	public void stopScreenRecording() throws InterruptedException {
 		/** stop recording for Driver screen **/
 		if (user != null) {
             String userVideo = ((CanRecordScreen) user).stopRecordingScreen();

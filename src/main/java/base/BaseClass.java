@@ -8,6 +8,9 @@ import java.time.Duration;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import io.appium.java_client.android.Activity;
 import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.screenrecording.CanRecordScreen;
+
+
 
 public class BaseClass {
 
