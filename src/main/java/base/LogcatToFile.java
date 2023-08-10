@@ -2,6 +2,7 @@ package base;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,8 +21,8 @@ import java.util.regex.Pattern;
 import org.json.JSONObject;
 
 import static base.ADBDeviceFetcher.devices;
-import static base.BaseClass.DriverDeviceIndex;
-import static base.BaseClass.UserDeviceIndex;
+import static base.BaseClass.driverDeviceIndex;
+import static base.BaseClass.userDeviceIndex;
 import static base.BaseClass.version;
 import static base.BaseClass.appPath;
 import static base.BaseClass.userApkName;
@@ -113,7 +114,7 @@ public class LogcatToFile {
     public static void searchApiErr() throws IOException {
         String deviceSerialNumber;
         String line = null;
-        for(int i = 0; i < BaseClass.DeviceIndex; i++){
+        for(int i = 0; i < BaseClass.deviceIndex; i++){
             String apiFormattedText = "";
             deviceSerialNumber = devices.get(i);
             String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
@@ -140,7 +141,7 @@ public class LogcatToFile {
             // Handle any exceptions
         }
         if(apiFormattedText != ""){
-            if(i == UserDeviceIndex){
+            if(i == userDeviceIndex){
                 Allure.addAttachment("User Api Error ", apiFormattedText);
             } else {
                 Allure.addAttachment("Driver Api Error ", apiFormattedText);
@@ -157,7 +158,7 @@ public class LogcatToFile {
         String uncaughtTypeError = "Uncaught TypeError:";
         String deviceSerialNumber;
 
-        for(int i = 0; i < BaseClass.DeviceIndex; i++){
+        for(int i = 0; i < BaseClass.deviceIndex; i++){
             String jsErrorString = null;
             deviceSerialNumber = devices.get(i);
             String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
@@ -173,7 +174,7 @@ public class LogcatToFile {
                 }
             } catch (IOException e) {}
             if(jsErrorString != null){
-                if(i == UserDeviceIndex){
+                if(i == userDeviceIndex){
                     Allure.addAttachment("User JavaScript Error ", jsErrorString);
                 } 
                 else {
@@ -185,8 +186,10 @@ public class LogcatToFile {
 
     /**
      * Fetches app details from the log file.
+     * @throws IOException
+     * @throws FileNotFoundException
      */
-    public static void fetchAppDetails() {
+    public static void fetchAppDetails() throws FileNotFoundException, IOException {
         String deviceSerialNumber;
         String apkName = null;
         String bundleVersion = null;
@@ -201,27 +204,13 @@ public class LogcatToFile {
             try (BufferedReader reader = new BufferedReader(new FileReader(readLogCatFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.contains(" D SdkTracker: ")) {
-                        // Extract the JSON string from the log message.
-                        String jsonString = extractJSONStringFromLogLine(line);
-                        if (jsonString != null) {
-                            // Parse the JSON string into a JSONObject.
-                            JSONObject jsonObject = new JSONObject(jsonString);
-                            // Extract the "bundle_version" from the JSONObject.
-                            bundleVersion = jsonObject.optString("bundle_version");
-                            // Check if "bundle_version" has a value.
-                            if (!bundleVersion.isEmpty()) {
-                                // Set the flag to true to stop looping
-                                bundleVersionFound = true;
-                                break;
-                            }
-                        } else {
-                            System.out.println("JSON object not found in the log line.");
-                        }
+                    if (line.contains(" D SdkTracker: ") && line.contains("bundle_version") && compareTime(line)) {
+                        JSONObject jsonObject = new JSONObject(line.substring(line.indexOf("{")));
+                        bundleVersion = jsonObject.getString("bundle_version");
                     }
                 }
 
-                if (i == UserDeviceIndex) {
+                if (i == userDeviceIndex) {
                     apkName = userApkName;
                     String fetchVersion = appPath + apkName;
                     
@@ -240,7 +229,7 @@ public class LogcatToFile {
                     if (bundleVersion != null) {
                         appDetails += "\nBundle Version : " + bundleVersion;
                     }
-                } else if (i == DriverDeviceIndex) {
+                } else if (i == driverDeviceIndex) {
                     apkName = driverApkName;
                     String fetchVersion = appPath + apkName;
                     Map<String, String> versions = fetchAndroidAppVersions(fetchVersion);
@@ -255,35 +244,18 @@ public class LogcatToFile {
                         appDetails += "\nBundle Version : " + bundleVersion;
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
 
             System.out.println("App Details:\n" + appDetails);
 
             // Add app details as an attachment to Allure report.
-            if (i == UserDeviceIndex) {
+            if (i == userDeviceIndex) {
             	Allure.addAttachment("User App Version Details", appDetails);
             }
             else {
             	Allure.addAttachment("Driver App Version Details", appDetails);
             }
         }
-    }
-
-    /**
-     * Extracts the JSON string from the log line.
-     * @param logLine the log line to extract the JSON string from.
-     * @return the extracted JSON string or null if not found.
-     */
-    private static String extractJSONStringFromLogLine(String logLine) {
-        int jsonStartIndex = logLine.indexOf("{");
-        int jsonEndIndex = logLine.lastIndexOf("}");
-
-        if (jsonStartIndex >= 0 && jsonEndIndex > jsonStartIndex) {
-            return logLine.substring(jsonStartIndex, jsonEndIndex + 1);
-        }
-        return null;
     }
     
     /**
@@ -326,7 +298,7 @@ public class LogcatToFile {
         String arrIOBException = "java.lang.ArrayIndexOutOfBoundsException";
         String jsonException = "org.json.JSONException";
         String deviceSerialNumber;
-        for(int i = 0; i < BaseClass.DeviceIndex; i++){
+        for(int i = 0; i < BaseClass.deviceIndex; i++){
             String exceptionString = "";
             deviceSerialNumber = devices.get(i);
             String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
@@ -365,7 +337,7 @@ public class LogcatToFile {
                 }
             }
             if(exceptionString != ""){
-                if(i == UserDeviceIndex){
+                if(i == userDeviceIndex){
                     Allure.addAttachment("Exception in User", exceptionString);
                 }
                 else{
