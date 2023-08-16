@@ -14,8 +14,8 @@ public class BaseClass {
 
     public static String rideOTP = "";
     public static AndroidDriver user, driver;
-    public static int UserDeviceIndex, DriverDeviceIndex;
-    public static int DeviceIndex = 0;
+    public static int userDeviceIndex, driverDeviceIndex;
+    public static int deviceIndex = 0;
     public static String version = "";
     public static String appPath = "";
     public static String userApkName = SlackBotIntegration.CUSTOMER_FILE;
@@ -26,16 +26,16 @@ public class BaseClass {
         DesiredCapabilities userCapabilities = new DesiredCapabilities();
         DesiredCapabilities driverCapabilities = new DesiredCapabilities();
         if(isUser) {
-            user = setupAndroidCapUser(ADBDeviceFetcher.devices.get(DeviceIndex), userApkName, userCapabilities);
-            UserDeviceIndex = DeviceIndex;
-            System.out.println("\nUser App Installed in " + ADBDeviceFetcher.devices.get(DeviceIndex) + " device\n");
+            user = setupAndroidCapUser(ADBDeviceFetcher.devices.get(deviceIndex), userApkName, userCapabilities);
+            userDeviceIndex = deviceIndex;
+            System.out.println("\nUser App Installed in " + ADBDeviceFetcher.devices.get(deviceIndex) + " device\n");
         }
         else{
-            driver = setupAndroidCapDriver(ADBDeviceFetcher.devices.get(DeviceIndex), driverApkName, driverCapabilities);
-            DriverDeviceIndex = DeviceIndex;
-            System.out.println("\nDriver App Installed in " + ADBDeviceFetcher.devices.get(DeviceIndex) + " device\n");
+            driver = setupAndroidCapDriver(ADBDeviceFetcher.devices.get(deviceIndex), driverApkName, driverCapabilities);
+            driverDeviceIndex = deviceIndex;
+            System.out.println("\nDriver App Installed in " + ADBDeviceFetcher.devices.get(deviceIndex) + " device\n");
         }
-        DeviceIndex ++;
+        deviceIndex ++;
     }
 
     private static AndroidDriver setupAndroidCapDriver(String udid, String appFile, DesiredCapabilities capabilities) throws MalformedURLException {
