@@ -2,18 +2,10 @@ package NYAutomation;
 
 
 
-import org.testng.annotations.Test;
+import base.ADBDeviceFetcher;
 import base.BaseClass;
 import base.LogcatToFile;
-import base.ADBDeviceFetcher;
-import static base.ADBDeviceFetcher.androidVersions;
-import static base.ADBDeviceFetcher.brandNames;
-import static base.ADBDeviceFetcher.modelNames;
-import static base.ADBDeviceFetcher.resolutions;
-import static base.ADBDeviceFetcher.devices;
-
 import com.google.common.collect.ImmutableMap;
-
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
@@ -29,8 +21,10 @@ import okhttp3.*;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
-
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,30 +41,28 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
+import okhttp3.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.remote.RemoteWebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Wait;
-import org.openqa.selenium.remote.RemoteWebElement;
-import org.openqa.selenium.NoSuchElementException;
-
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
-
-import java.io.FileOutputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-import java.io.FileInputStream;
-
-import okhttp3.*;
+import org.testng.annotations.Test;
+import static base.ADBDeviceFetcher.androidVersions;
+import static base.ADBDeviceFetcher.brandNames;
+import static base.ADBDeviceFetcher.modelNames;
+import static base.ADBDeviceFetcher.resolutions;
+import static base.ADBDeviceFetcher.devices;
 
 
 public class AutomationFlow extends BaseClass {
@@ -147,6 +139,7 @@ public class AutomationFlow extends BaseClass {
             catch (Exception e) {
                 screenStatusMap.put(currentTimeStamp + "|" + formattedTimeDifference + "|" + whichApp + "|" + testCase + "|" + screen + "|" + state, "Failed");
             	logErrorToAllureReport(e.getMessage(), driver, user, screenStatusMap);
+                // Thread.sleep(3000);
                 throw e;
             }
         }
@@ -402,8 +395,11 @@ public class AutomationFlow extends BaseClass {
             Thread.sleep(2000);
             /* Perform the pull down the notifications */
             user.openNotifications();
+
             /* Perform a click action on the element */
             Thread.sleep(2000);
+            user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Invoice Downloaded']")).click();
+            Thread.sleep(5000);
             return;
         }
         
@@ -588,33 +584,44 @@ public class AutomationFlow extends BaseClass {
     	/* Validating the otp entered is correct or not */
         else if ("Login OTP".equals(state)) {
     	    user.findElement(AppiumBy.xpath("//android.widget.EditText[@text='Enter 4 digit OTP']")).click();
+            
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_7));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_8));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_9));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_5));
+        	
         	user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Resend']")).click();
         	Thread.sleep(16000);
+        	
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_7));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_8));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_9));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_1));
+        	
         	return;
         }
     	
         else if ("Driver Login OTP".equals(state)) {
     		driver.findElement(AppiumBy.xpath("//android.widget.EditText[@text='Auto Reading OTP...']")).click();
+            
     		Thread.sleep(3000);
+    		
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_7));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_8));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_9));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_5));
+        	
         	Thread.sleep(12000);
+        	
         	driver.findElement(AppiumBy.xpath("//android.widget.EditText")).click();
+        	
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
+
         	Thread.sleep(2000);
+
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_7));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_8));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_9));
@@ -704,7 +711,7 @@ public class AutomationFlow extends BaseClass {
 
 
     public Wait<AndroidDriver> waitTime(boolean isUser) {
-        /* Creating a wait object to wait for the user or driver */
+    	/* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
                 .withTimeout(Duration.ofSeconds(60))
                 .pollingEvery(Duration.ofMillis(3000))

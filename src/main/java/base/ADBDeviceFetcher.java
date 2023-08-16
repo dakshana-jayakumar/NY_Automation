@@ -18,7 +18,7 @@ public class ADBDeviceFetcher {
     // }
 
     public static void fetchAdbDeviceProperties() throws IOException {
-        String adbPath = "/Users/" + System.getProperty("user.name") + "/Library/Android/sdk/platform-tools/adb";
+        String adbPath = "/home/" + System.getProperty("user.name") + "/Android/Sdk/platform-tools/adb";
         // Fetch connected devices
         Process devicesProcess = Runtime.getRuntime().exec(adbPath + " devices");
         BufferedReader devicesReader = new BufferedReader(new InputStreamReader(devicesProcess.getInputStream()));
@@ -70,7 +70,7 @@ public class ADBDeviceFetcher {
 
     // Helper method to get device property using adb shell command
     public static String getProperty(String device, String property) throws IOException {
-        String adbPath = "/Users/" + System.getProperty("user.name") + "/Library/Android/sdk/platform-tools/adb";
+        String adbPath = "/home/" + System.getProperty("user.name") + "/Android/Sdk/platform-tools/adb";
         Process process = Runtime.getRuntime().exec(adbPath + " -s " + device + " shell " + property);
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         String line = reader.readLine();

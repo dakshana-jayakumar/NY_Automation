@@ -1,16 +1,6 @@
 package base;
 
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-
 import com.slack.api.Slack;
 import com.slack.api.bolt.App;
 import com.slack.api.bolt.AppConfig;
@@ -22,7 +12,15 @@ import com.slack.api.model.Message;
 import com.slack.api.model.event.FileSharedEvent;
 import com.slack.api.webhook.Payload;
 import com.slack.api.webhook.WebhookResponse;
-
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -30,7 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -289,7 +286,7 @@ public class SlackBotIntegration {
 	        // Determine the confirmation argument based on the boolean value
 	        String confirmationArg = confirmation ? "yes" : "no";
 	        // Execute the Maven command using ProcessBuilder
-	        String mvnExecutable = "/opt/homebrew/bin/mvn"; // Replace '/path/to/mvn' with the actual path to the 'mvn' executable
+	        String mvnExecutable = "/usr/bin/mvn"; // Replace '/path/to/mvn' with the actual path to the 'mvn' executable
 	        ProcessBuilder processBuilder = new ProcessBuilder(mvnExecutable, "test", "-Dtest=NYAutomation.AutomationFlow#flow", "-Dconfirmation=" + confirmationArg);
 	        processBuilder.directory(new File(workingDirectory));
 	        Process process = processBuilder.start();

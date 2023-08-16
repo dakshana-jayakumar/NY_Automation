@@ -36,7 +36,7 @@ public class TestDataReader {
 
             // Build the Sheets service
             Sheets sheetsService = buildSheetsService(credential);
-            String range = "TestCases!A1:A";
+            String range = "DevsTestCases!A1:A";
             ValueRange response = getSheetValues(sheetsService, range);
 
             List<List<Object>> values = response.getValues();
