@@ -39,7 +39,7 @@ public class BaseClass {
     }
 
     private static AndroidDriver setupAndroidCapDriver(String udid, String appFile, DesiredCapabilities capabilities) throws MalformedURLException {
-        appPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator
+        appPath = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator
                 + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "BotApk" + File.separator;
         String appFilePath = appPath + appFile;
 
@@ -57,7 +57,7 @@ public class BaseClass {
     }
 
     private static AndroidDriver setupAndroidCapUser(String udid, String appFile, DesiredCapabilities capabilities) throws MalformedURLException {
-        appPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator
+        appPath = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator
                 + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "BotApk" + File.separator;
         String appFilePath = appPath + appFile;
 

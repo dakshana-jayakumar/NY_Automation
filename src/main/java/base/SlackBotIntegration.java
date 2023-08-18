@@ -44,8 +44,8 @@ public class SlackBotIntegration {
     public static String SLACK_SIGNING_SECRET = "";
     public static String CUSTOMER_FILE = "user.apk";
     public static String DRIVER_FILE = "driver.apk";
-    public static String PATH = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
-                                + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "BotApk"  + File.separator;
+    public static String PATH = "/home/" + System.getProperty("user.name") + File.separator + "src" + File.separator + "main"
+                                + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "BotApk" + File.separator;
     private static ExecutorService executorService = Executors.newFixedThreadPool(1);
     private static Boolean happen = true;
     private static String webHooksUrl = "";

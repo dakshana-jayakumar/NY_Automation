@@ -6,6 +6,7 @@ import base.ADBDeviceFetcher;
 import base.BaseClass;
 import base.LogcatToFile;
 import com.google.common.collect.ImmutableMap;
+
 import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
@@ -29,11 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.time.Duration;
-import java.util.Scanner;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +38,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import okhttp3.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
@@ -98,8 +94,9 @@ public class AutomationFlow extends BaseClass {
 		/* Add Allure report cleanup code here */
     	String confirmation = System.getProperty("confirmation");
     	String[] directoryPaths = {
-    			 	System.getProperty("user.dir") + File.separator + "allure-results",
-    			 	System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                    "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
+    	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "allure-results",
+    			 	"/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
     	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "ScreenRecordings"
     	    	};
     	cleanupAllureReport(confirmation, directoryPaths);
@@ -1137,8 +1134,8 @@ public class AutomationFlow extends BaseClass {
             }
         }
     }
-    
-    
+
+
     public static void sendZipToSlack(String zipFilePath, String message) {
         try {
             String channelID = "";
@@ -1172,13 +1169,13 @@ public class AutomationFlow extends BaseClass {
     }
     
 	
-	public void stopScreenRecording() throws InterruptedException {
+	public void stopScreenRecording() {
 		/** stop recording for Driver screen **/
 		if (user != null) {
             String userVideo = ((CanRecordScreen) user).stopRecordingScreen();
             byte[] userDecodeVideo = Base64.getMimeDecoder().decode(userVideo);
             try {
-                Path userVideoDir = Paths.get(System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+                Path userVideoDir = Paths.get("/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
 	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "ScreenRecordings");
 				Files.createDirectories(userVideoDir);
 				userVideoFileLocation = Paths.get(userVideoDir.toString(), String.format("%s.%s", "UserRecording", "mp4"));
@@ -1186,7 +1183,7 @@ public class AutomationFlow extends BaseClass {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("stopScreenRecording executed Driver");
+            System.out.println("stopScreenRecording executed User");
         }
 
 		if (driver != null) {
@@ -1194,7 +1191,7 @@ public class AutomationFlow extends BaseClass {
 			String driverVideo = ((CanRecordScreen) driver).stopRecordingScreen();
 			byte[] driverDecodeVideo = Base64.getMimeDecoder().decode(driverVideo);
 			try {
-				Path driverVideoDir = Paths.get(System.getProperty("user.dir") + File.separator + "src" + File.separator + "main"
+				Path driverVideoDir = Paths.get("/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
 	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "ScreenRecordings");
 				Files.createDirectories(driverVideoDir);
 				driverVideoFileLocation = Paths.get(driverVideoDir.toString(), String.format("%s.%s", "DriverRecording", "mp4"));
@@ -1202,42 +1199,51 @@ public class AutomationFlow extends BaseClass {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			System.out.println("stopScreenRecording executed User");
+			System.out.println("stopScreenRecording executed Driver");
 		}
 	}
-	
 
-	public static void sendMp4ToSlack(Path videoFilePath, String message) {
+
+	public static void sendMp4ToSlack(Path videoFilePath, String message) throws InterruptedException {
         try {
+            Thread.sleep(15000);
+            System.out.println("check 1");
             String channelID = "";
             String slackToken = "";
+            System.out.println("check 2");
             OkHttpClient client = new OkHttpClient();
-            MediaType mediaType = MediaType.parse("application/mp4");
-            
+            // MediaType mediaType = MediaType.parse("application/mp4");
+            MediaType mediaType = MediaType.parse("video/mp4");
+            System.out.println("check 3");
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("file", videoFilePath.toString(), RequestBody.create(mediaType, new java.io.File(videoFilePath.toString())))
                     .addFormDataPart("channels", channelID)
                     .addFormDataPart("initial_comment", message)
                     .build();
-
+            System.out.println("check 4");
             Request request = new Request.Builder()
                     .url("")
                     .post(requestBody)
                     .addHeader("Authorization", "Bearer " + slackToken)
                     .build();
-
+            System.out.println("check 5");
             Response response = client.newCall(request).execute();
+            System.out.println("response :: " + response.body());
+            System.out.println("response 123 :: " + response);
+            System.out.println("check 6");
             if (response.isSuccessful()) {
-                System.out.println("Zip file sent to Slack successfully.");
+                System.out.println("Video file sent to Slack successfully.");
             } else {
-                System.err.println("Failed to send zip file to Slack. Response code: " + response.code());
+                System.err.println("Failed to send video file to Slack. Response code: " + response.code());
             }
-        } catch (Exception e) {
+            System.out.println("check 6");
+        } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("check 7");
     }
-    
+
 
 	@AfterSuite
     public void tearDown() throws InterruptedException {
@@ -1249,10 +1255,13 @@ public class AutomationFlow extends BaseClass {
             driver.quit();
         }
 
-        String allureReportFolder = System.getProperty("user.dir") + File.separator + "allure-results";
-        String zipFilePath = System.getProperty("user.dir") + File.separator + "allure-results" + File.separator + "allure-report.zip";
+        String allureReportFolder = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
+    	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "allure-results";
+        String zipFilePath = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
+    	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "allure-results" + File.separator + "allure-report.zip";
         
         zipAllureReportFolder(allureReportFolder, zipFilePath);
+
         String message = "Follow 👇 steps to check your reports :- \n"
         		+ "1. Allure report is ready, download it\n"
                 + "2. Unzip the report folder\n"
@@ -1262,7 +1271,7 @@ public class AutomationFlow extends BaseClass {
                 + "5. After opening click on show all in the Suites and see test case details on the right on side ";
         sendZipToSlack(zipFilePath, message);
         
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         
         if (driverVideoFileLocation != null) {
         	// Upload Driver video to Slack
@@ -1270,9 +1279,11 @@ public class AutomationFlow extends BaseClass {
         	sendMp4ToSlack(driverVideoFileLocation, recordMessage);
         }
         if (userVideoFileLocation != null) {
+            System.out.println("user path check :: " + userVideoFileLocation);
         	// Upload User video to Slack
         	String recordMessage = "Attached Screen recording for User👇";
         	sendMp4ToSlack(userVideoFileLocation, recordMessage);
         }
+        Thread.sleep(10000);
     }
 }

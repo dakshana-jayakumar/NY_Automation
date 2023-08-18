@@ -60,8 +60,8 @@ public class LogcatToFile {
      * @throws InterruptedException if the thread is interrupted.
      */
     private static void fetchLogsForDevice(String deviceSerialNumber) throws IOException, InterruptedException {
-        String adbPath = "/Users/" + System.getProperty("user.name") + "/Library/Android/sdk/platform-tools/adb";
-        String LogcatFileLocation = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "logFiles" + File.separator
+        String adbPath = "/home/" + System.getProperty("user.name") + "/Library/Android/sdk/platform-tools/adb";
+        String LogcatFileLocation = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator
                 + "logFile_" + deviceSerialNumber + ".txt";
 
         // Delete or create the logcat file
@@ -117,7 +117,7 @@ public class LogcatToFile {
         for(int i = 0; i < BaseClass.deviceIndex; i++){
             String apiFormattedText = "";
             deviceSerialNumber = devices.get(i);
-            String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
+            String readLogCatFile = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
                                 + "logFile_" + deviceSerialNumber + ".txt";
 
         try (BufferedReader reader = new BufferedReader(new FileReader(readLogCatFile))) {
@@ -161,7 +161,7 @@ public class LogcatToFile {
         for(int i = 0; i < BaseClass.deviceIndex; i++){
             String jsErrorString = null;
             deviceSerialNumber = devices.get(i);
-            String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
+            String readLogCatFile = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
                                 + "logFile_" + deviceSerialNumber + ".txt";
             try (BufferedReader reader = new BufferedReader(new FileReader(readLogCatFile))) {
                 String line;
@@ -196,7 +196,7 @@ public class LogcatToFile {
         
         for (int i = 0; i < devices.size(); i++) {
             deviceSerialNumber = devices.get(i);
-            String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator
+            String readLogCatFile = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator
                 + "logFile_" + deviceSerialNumber + ".txt";
             boolean bundleVersionFound = false;
             String appDetails = "";
@@ -301,7 +301,7 @@ public class LogcatToFile {
         for(int i = 0; i < BaseClass.deviceIndex; i++){
             String exceptionString = "";
             deviceSerialNumber = devices.get(i);
-            String readLogCatFile = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
+            String readLogCatFile = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" +  File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator 
                                 + "logFile_" + deviceSerialNumber + ".txt";
             try (BufferedReader reader = new BufferedReader(new FileReader(readLogCatFile))) {
                 String line;
