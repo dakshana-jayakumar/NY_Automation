@@ -17,8 +17,8 @@ public class BaseClass {
     public static int deviceIndex = 0;
     public static String version = "";
     public static String appPath = "";
-    public static String userApkName = "app-ny_-prod-debug-master-15-jul.apk";
-    public static String driverApkName = "app-ny_p_-prod-debug-master-15-Jul.apk";
+    public static String userApkName = "NY-USER-MASTER.apk";
+    public static String driverApkName = "NY-DRIVER-MASTER.apk";
    
     public static void setup(boolean isUser) throws IOException {
         if((deviceIndex < ADBDeviceFetcher.devices.size())){
@@ -89,10 +89,18 @@ public class BaseClass {
         capabilities.setCapability("fullReset", true);
         capabilities.setCapability("app", appFilePath);
         if(isUser){
-            user = new AndroidDriver(new URL("http://0.0.0.0:4724"), capabilities);
+            try {
+                user = new AndroidDriver(new URL("http://0.0.0.0:4723"), capabilities);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             user.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         }else{
-            driver = new AndroidDriver(new URL("http://0.0.0.0:4725"), capabilities);
+            try {
+                driver = new AndroidDriver(new URL("http://0.0.0.0:4724"), capabilities);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         }
     }
