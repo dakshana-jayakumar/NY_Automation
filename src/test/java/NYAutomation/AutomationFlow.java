@@ -69,8 +69,11 @@ public class AutomationFlow extends BaseClass {
 
     static Map<String, String> screenStatusMap = new HashMap<>();
 
-	private final String userMobileNumber = "7777777722";
-	private final String driverMobileNumber = "9999999922";
+	private final String userMobileNumber = "7777777733";
+	private final String driverMobileNumber = "9999999933";
+	
+	private final String secondUserMobileNumber = "7777777722";
+	private final String secondDriverMobileNumber = "9999999922";
 	
 	private String cugUserMobileNumber = "8497879347";
 	private String cugDriverMobileNumber = "8497879347";
@@ -252,6 +255,39 @@ public class AutomationFlow extends BaseClass {
             }
         }
         
+        
+        if ("Second Enter Mobile Number".equals(state)) {
+            try {
+                WebElement element = (isUser ? user : driver).findElement(AppiumBy.xpath("//android.widget.Button[@text='NONE OF THE ABOVE']"));
+                if (element.isDisplayed()) {
+                    element.click();
+                }
+            } catch (NoSuchElementException e) {}
+            (isUser ? user : driver).findElement(AppiumBy.xpath(xpath)).click();
+            if (cugOrMasterInput.contains("cug")) {
+            	sendKeysValue = (isUser ? cugUserMobileNumber : cugDriverMobileNumber);
+            }
+            else {
+            	sendKeysValue = (isUser ? secondUserMobileNumber : secondDriverMobileNumber);
+            }
+        }
+
+        else if ("Re enter mobile number".equals(state)) {
+            try {
+                WebElement element = (isUser ? user : driver).findElement(AppiumBy.xpath("//android.widget.Button[@text='NONE OF THE ABOVE']"));
+                if (element.isDisplayed()) {
+                    element.click();
+                }
+            } catch (NoSuchElementException e) {}
+            user.findElement(AppiumBy.xpath(xpath)).click();
+            int loopCount = 10;
+            for (int i = 0; i < loopCount; i++) {
+            	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DEL));
+                Thread.sleep(1000);
+            }
+            return;
+        }
+
     	else if ("Location Permission".equals(state)) {
             /* If the state is "Location Permission" */
             /* Call the checkLocationPermission method to modify the xpath value */
@@ -300,7 +336,9 @@ public class AutomationFlow extends BaseClass {
         
         else if ("AutoStart".equals(state)) {
         	int androidVersion = Integer.parseInt(androidVersions.get(driverDeviceIndex));
-    	    if (androidVersion == 10) {
+        	driver.findElement(AppiumBy.xpath(xpath)).click();
+        	
+        	if (androidVersion == 10) {
     	        Thread.sleep(2000);
                 KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.BACK);
     	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
@@ -329,19 +367,19 @@ public class AutomationFlow extends BaseClass {
         }
         
         else if ("Scroll Function".equals(state)) {
-        	int androidVersion = Integer.parseInt(androidVersions.get(userDeviceIndex));
+            int androidVersion = Integer.parseInt(androidVersions.get(userDeviceIndex));
         	By buttonLayoutLocator = By.xpath(xpath);
             WebElement source = user.findElement(buttonLayoutLocator);
-        	if (androidVersion == 9 || androidVersion == 10 || androidVersion == 11 || androidVersion == 12 || androidVersion == 13) {
-        		boolean canScrollMore = (Boolean)user.executeScript("mobile: scrollGesture", ImmutableMap.of(
-        				"left", 100, "top", 100, "width", 1200, "height", 1200,
-        				"direction", "down",
-        				"percent", 3.0
-        				));
-            	Thread.sleep(3000);
-            	return;
-        	}
-        	else {
+            if (androidVersion == 9 || androidVersion == 10 || androidVersion == 11 || androidVersion == 12 || androidVersion == 13) {
+                boolean canScrollMore = (Boolean)user.executeScript("mobile: scrollGesture", ImmutableMap.of(
+                        "left", 100, "top", 100, "width", 1200, "height", 1200,
+                        "direction", "down",
+                        "percent", 3.0
+                        ));
+                Thread.sleep(3000);
+                return;
+            }
+            else {
         		// Duration of the drag gesture in milliseconds
         		int durationInMillis = 3000;
                 int startX = source.getLocation().getX();
@@ -364,38 +402,59 @@ public class AutomationFlow extends BaseClass {
         }
         
         else if (("Fetch Otp").equals(state)) {
-            rideOtp = ""; // Reset rideOtp before processing the OTP for each ride
-            /* Fetching OTP digits */
+            // Fetch correct OTP
+            String rideOtp = "";
             for (int i = 1; i <= 4; i++) {
                 rideOtp = rideOtp + wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(xpath + "/../android.widget.LinearLayout/android.widget.LinearLayout[" + i + "]/android.widget.TextView"))).getText();
             }
-            System.out.println("Ride Otp = " + rideOtp);
+            // Print fetched OTP
+            System.out.println("Fetched Ride OTP = " + rideOtp);
 
+           Thread.sleep(2000);
+           driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='1']")).click();
+           Thread.sleep(2000);
+           driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='2']")).click();
+           Thread.sleep(2000);
+           driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='3']")).click();
+           Thread.sleep(2000);
+           driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='4']")).click();
+           Thread.sleep(3000);
+
+            // Convert OTP to char array and enter correct OTP
             char[] otp = rideOtp.toCharArray();
-            /* Entering OTP digits */
             for (int i = 0; i < 4; i++) {
                 char digit = otp[i];
-                System.out.println("Otp Digit = " + digit);
+                System.out.println("Entering Otp Digit = " + digit);
                 String xpath2 = "//android.widget.TextView[@text='Please ask the customer for the OTP']/../../../android.widget.LinearLayout[2]/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView[@text='" + digit + "']";
                 driver.findElement(AppiumBy.xpath(xpath2)).click();
             }
-            System.out.println("Ride Otp = " + rideOtp);
-
             Thread.sleep(2000);
             return;
         }
         
         else if ("App switch".equals(state)) {
-    	    	int loopCount = 2; // Number of times to loop
-    	    	for (int i = 0; i < loopCount; i++) {
+            int loopCount = 2; // Number of times to loop
+            for (int i = 0; i < loopCount; i++) {
     	        Thread.sleep(2000);
     	        /* Simulate the App Switcher (Recent Apps) key */
     	        KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.APP_SWITCH);
     	        (isUser ? user : driver).pressKey(appSwitcherKeyEvent);
-    	    }
+            }
     	    return;
     	}
-        
+
+        else if ("Google Map Navigation".equals(state)) {
+            Thread.sleep(3000);
+            try {
+                if (driver.findElement(AppiumBy.xpath("//android.widget.ImageView[@content-desc='Close navigation']")).isDisplayed()) {
+                    driver.findElement(AppiumBy.xpath("//android.widget.ImageView[@content-desc='Close navigation']")).click();
+                }
+            } catch (NoSuchElementException e) {
+            }
+            Thread.sleep(2000);
+            return;
+        }
+
         else if ("Home Press".equals(state)) {
             Thread.sleep(2000);
             (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.HOME));
@@ -445,7 +504,7 @@ public class AutomationFlow extends BaseClass {
             }
         	int loopCount = 3; // Number of times to loop
 	    	for (int i = 0; i < loopCount; i++) {
-	    		user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Where to?']/../../../../../android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.LinearLayout[2]/android.widget.ImageView")).click();
+	    		user.findElement(AppiumBy.xpath(xpath)).click();
 	    	}
         	Thread.sleep(5000);
         	return;
@@ -656,16 +715,87 @@ public class AutomationFlow extends BaseClass {
     	}
     	
     	else if (("Writing user reason".equals(state)) || ("Writing driver reason".equals(state))) {
-        	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.S));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.Y));
+        	((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.S));
+            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.Y));
+            Thread.sleep(2000);
+            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.BACK));
         	return;
         }
         
     	else if ("Waiting Time".equals(state)) {
         	Thread.sleep(5000);
+        	return;
+        }
+        
+        else if ("Write Feedback".equals(state)) {
+            user.findElement(AppiumBy.xpath(xpath)).click();
+            user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Safe Ride']")).click();
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.G));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.D));
+            Thread.sleep(3000);
+            user.pressKey(new KeyEvent(AndroidKey.BACK));
+        	return;
+        }
+
+        else if ("Report an issue".equals(state)) {
+            user.findElement(AppiumBy.xpath(xpath)).click();
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.G));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.D));
+            Thread.sleep(3000);
+            user.pressKey(new KeyEvent(AndroidKey.BACK));
+        	return;
+        }
+
+        else if ("Report Lost Item".equals(state)) {
+            driver.findElement(AppiumBy.xpath(xpath)).click();
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.L));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.O));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.S));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.T));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.SPACE));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.M));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.Y));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.SPACE));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.B));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.A));
+            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.G));
+            Thread.sleep(3000);
+            driver.pressKey(new KeyEvent(AndroidKey.BACK));
+        	return;
+        }
+        
+        else if ("Delete icon".equals(state)) {
+        	int loopCount = 10;
+            for (int i = 0; i < loopCount; i++) {
+            	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
+            }
+        	return;
+        }   
+        
+        else if ("Source Autotype".equals(state)) {
+        	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.I));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.N));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.D));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
+            return;
+        }
+
+        else if ("Notification permission".equals(state)) {
+        	try {
+        		WebElement notificationPopupElement = (isUser ? user : driver).findElement(By.xpath(xpath));
+	            if (notificationPopupElement.isDisplayed()) {
+	                notificationPopupElement.click();
+	            }
+        	} catch (NoSuchElementException e) {
+        	}
         	return;
         }
         
@@ -879,13 +1009,30 @@ public class AutomationFlow extends BaseClass {
     	return;
     }
     
-    public void customizedKeyboardAction(String xpath, int interation, char[] number){
+    public void customizedOtpKeyboardAction(String xpath, int interation, char[] number){
+    	String xpath1 = "//android.widget.TextView[@text='";
         for (int i = 0; i < interation; i++) {
-            driver.findElement(AppiumBy.xpath(xpath + number[i] + ("']"))).click();
+            driver.findElement(AppiumBy.xpath(xpath1 + number[i] + ("']"))).click();
             System.out.println(xpath + number[i] + ("']"));
         }
         driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='0']/../../../../android.widget.LinearLayout[4]/android.widget.LinearLayout[3]/android.widget.LinearLayout/android.widget.ImageView")).click();
     }
+    
+    
+    
+    public void customizedKeyboardAction(String xpath, int interation, char[] number){
+        String xpath2 = "//android.widget.EditText";
+        driver.findElement(AppiumBy.xpath(xpath2)).click();
+        for (int i = 0; i < interation; i++) {
+            char digit = number[i];
+            AndroidKey key = AndroidKey.valueOf("DIGIT_" + digit);
+            ((AndroidDriver) driver).pressKey(new KeyEvent(key));
+            System.out.println("//android.widget.EditText[@text='" + number[i] + ("']"));
+        }
+        driver.pressKey(new KeyEvent(AndroidKey.BACK));
+        driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Update']")).click();
+    }
+    
     
     private char[] generateNewMobNumber() {
         long randomNumber2 = (long) (Math.random() * 900000000L) + 100000000L;
@@ -894,7 +1041,7 @@ public class AutomationFlow extends BaseClass {
             return phoneNumberSecond.toCharArray();
     }
     
-    public void alternateMobileNumberValidation(String state, String xpath) throws IOException  {
+    public void alternateMobileNumberValidation(String state, String xpath) throws IOException, InterruptedException  {
     	if ("Check Alternate Number in Homescreen".equals(state)) {
     	    try {
     	        if (driver.findElement(AppiumBy.xpath(xpath)).isDisplayed()) {
@@ -905,10 +1052,11 @@ public class AutomationFlow extends BaseClass {
     	    catch (NoSuchElementException e) {
                 System.out.println("Alternative number already added");
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Offline']/../../../../android.widget.LinearLayout[1]")).click();
-                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Personal Details']/../../../android.widget.LinearLayout[1]")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Driver Details']")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Number']/../../android.widget.LinearLayout[1]/android.widget.ImageView")).click();
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Remove']")).click();
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove It']")).click();
-                driver.findElement(AppiumBy.xpath(xpath)).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Number']/../../android.widget.LinearLayout[1]/android.widget.TextView[2]")).click();
                 return;
     	    }
     	}
@@ -917,17 +1065,21 @@ public class AutomationFlow extends BaseClass {
             if(state.contains("1")){
                 firstAltNumber = generateNewMobNumber();
                 customizedKeyboardAction(xpath, 10, firstAltNumber);
+                Thread.sleep(2000);
                 // Enter the wrong OTP
                 char[] wrongOtp = {'7', '8', '9', '5'};
                 // Enter the wrong OTP digit by digit
-                customizedKeyboardAction(xpath, 4, wrongOtp);
+                customizedOtpKeyboardAction(xpath, 4, wrongOtp);
+                Thread.sleep(2000);
                 // Enter the correct OTP
                 char[] correctOtp = {'7', '8', '9', '1'};
                 // Enter the correct OTP digit by digit
-                customizedKeyboardAction(xpath, 4, correctOtp);
+                customizedOtpKeyboardAction(xpath, 4, correctOtp);
+                Thread.sleep(2000);
             }
             else if(state.contains("2")){
                 customizedKeyboardAction(xpath, 10, firstAltNumber);
+                Thread.sleep(2000);
             }
         }
         return;

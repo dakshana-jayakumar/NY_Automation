@@ -36,17 +36,18 @@
 	    <version>5.0.9</version>
 	</dependency>
 	
+	<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-support -->
 	<dependency>
-     <groupId>org.seleniumhq.selenium</groupId>
-      <artifactId>selenium-support</artifactId>
-     <version>4.8.1</version>
+	    <groupId>org.seleniumhq.selenium</groupId>
+	    <artifactId>selenium-support</artifactId>
+	    <version>4.11.0</version>
 	</dependency>
 	
-		<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
+	<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
 	<dependency>
 	    <groupId>org.seleniumhq.selenium</groupId>
 	    <artifactId>selenium-java</artifactId>
-	    <version>4.9.0</version>
+	    <version>4.11.0</version>
 	</dependency>
       <!-- Google Sheets API -->
     <dependency>
@@ -112,6 +113,11 @@
 	    <artifactId>android</artifactId>
 	    <version>4.1.1.4</version>
 	    <scope>provided</scope>
+	</dependency>
+	<dependency>
+	    <groupId>org.apache.logging.log4j</groupId>
+	    <artifactId>log4j-core</artifactId>
+	    <version>2.17.1</version>
 	</dependency>
   </dependencies>
 
