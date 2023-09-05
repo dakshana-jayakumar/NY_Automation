@@ -297,7 +297,7 @@ public class AutomationFlow extends BaseClass {
     	else if ("Select Namma Yatri Partner".equals(state)) {
             /* If the state is "Select Namma Yatri Partner"*/
             /* Call the checkOverlayPermission method to perform action */
-            boolean doAction = checkOverlayPermission();
+            boolean doAction = checkOverlayPermission(xpath);
             if(!doAction) {return;}
         }
         
@@ -510,7 +510,16 @@ public class AutomationFlow extends BaseClass {
         	return;
         }
         
-        else if (("Allow Permission".equals(state)) && ("12".equals(androidVersions.get(userDeviceIndex)) || ("13".equals(androidVersions.get(userDeviceIndex))))){return;}
+        else if ("Allow Permission".equals(state)) {
+            try {
+        		WebElement element = user.findElement(By.xpath(xpath));
+	            if (element.isDisplayed()) {
+	            	element.click();
+	            }
+        	} catch (NoSuchElementException e) {
+        	}
+        	return;
+        }
         
         else if ("Favourite update toast".equals(state)) {
         	String ToastMessage = user.findElement(By.xpath("(//android.widget.Toast)[1]")).getAttribute("name");
@@ -659,7 +668,7 @@ public class AutomationFlow extends BaseClass {
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_9));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_5));
         	user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Resend']")).click();
-        	Thread.sleep(16000);
+        	Thread.sleep(4000);
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_7));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_8));
         	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DIGIT_9));
@@ -677,7 +686,7 @@ public class AutomationFlow extends BaseClass {
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_8));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_9));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DIGIT_5));
-        	Thread.sleep(12000);
+        	Thread.sleep(5000);
         	driver.findElement(AppiumBy.xpath("//android.widget.EditText")).click();
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
         	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
@@ -767,8 +776,7 @@ public class AutomationFlow extends BaseClass {
             ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.A));
             ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.G));
             Thread.sleep(3000);
-            driver.pressKey(new KeyEvent(AndroidKey.BACK));
-        	return;
+            return;
         }
         
         else if ("Delete icon".equals(state)) {
@@ -784,6 +792,13 @@ public class AutomationFlow extends BaseClass {
             ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.N));
             ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.D));
             ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.N));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.G));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
+            Thread.sleep(2000);
             ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
             return;
         }
@@ -797,6 +812,86 @@ public class AutomationFlow extends BaseClass {
         	} catch (NoSuchElementException e) {
         	}
         	return;
+        }
+        
+        else if ("Book Ride".equals(state)) {
+        	try {
+        		WebElement element = user.findElement(By.xpath(xpath));
+	            if (element.isDisplayed()) {
+	            	element.click();
+	            }
+        	} catch (NoSuchElementException e) {
+        	}
+        	return;
+        }
+        
+        else if ("Remove Name".equals(state)) {
+        	user.findElement(AppiumBy.xpath(xpath)).click();
+            int loop = 10;
+            for (int i = 0; i < loop; i++) {
+                ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DEL));
+                Thread.sleep(1000);
+                }
+            return;
+        }
+
+        else if ("Enter Name".equals(state)) {
+            user.findElement(AppiumBy.xpath(xpath)).click();
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.M));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.U));
+            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
+
+            return;
+        }
+        
+        else if ("Android Back".equals(state)) {
+        	((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.BACK));
+            return;
+        }
+        
+        else if ("Driver Gender Update".equals(state)) {
+        	try {
+        		WebElement element = driver.findElement(By.xpath(xpath));
+	            if (element.isDisplayed()) {
+	            	element.click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Male']")).click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Confirm']")).click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Personal Details']/../../android.widget.LinearLayout[1]/android.widget.ImageView")).click();
+	            }
+        	} catch (NoSuchElementException e) {
+        	}
+        	return;
+        	
+        }
+        
+        else if ("Languages update".equals(state)) {
+        	 scrollToText("About me");
+        	 Thread.sleep(3000);
+        	 try {
+         		WebElement element = driver.findElement(By.xpath("//android.widget.TextView[@text='Languages spoken']/../../android.widget.LinearLayout/android.widget.TextView[@text='Add']"));
+ 	            if (element.isDisplayed()) {
+ 	            	element.click();
+ 	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]")).click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[2]")).click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[3]")).click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[4]")).click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[5]")).click();
+                    driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[6]")).click();
+	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Update']")).click();
+ 	            }
+         	} catch (NoSuchElementException e) {
+         		driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Languages spoken']/../../android.widget.LinearLayout/android.widget.ImageView")).click();
+         		driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]")).click();
+            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[2]")).click();
+            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[3]")).click();
+            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[4]")).click();
+            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[5]")).click();
+            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[6]")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Update']")).click();
+         	}
+         	return;
         }
         
         while ("Remove all the fav".equals(state)) {
@@ -888,7 +983,7 @@ public class AutomationFlow extends BaseClass {
 	
 	private String checkBatteryPermission(String modifiedXpath) {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
-	    if ("google".equals(brandNames.get(driverDeviceIndex)) || ("Android".equals(brandNames.get(driverDeviceIndex)) || ("samsung".equals(brandNames.get(driverDeviceIndex))) || ("vivo".equals(brandNames.get(driverDeviceIndex))) || ("OPPO".equals(brandNames.get(driverDeviceIndex)) || ("iQOO".equals(brandNames.get(driverDeviceIndex)) || ("Realme".equals(brandNames.get(driverDeviceIndex)) || ("realme".equals(brandNames.get(driverDeviceIndex)) || ("OnePlus".equals(brandNames.get(driverDeviceIndex)) || ("Redmi".equals(brandNames.get(driverDeviceIndex)))))))))) {
+	    if ("google".equals(brandNames.get(driverDeviceIndex)) || ("Android".equals(brandNames.get(driverDeviceIndex)) || ("samsung".equals(brandNames.get(driverDeviceIndex))) || ("vivo".equals(brandNames.get(driverDeviceIndex))) || ("OPPO".equals(brandNames.get(driverDeviceIndex)) || ("iQOO".equals(brandNames.get(driverDeviceIndex)) || ("Realme".equals(brandNames.get(driverDeviceIndex)) || ("realme".equals(brandNames.get(driverDeviceIndex)) || ("OnePlus".equals(brandNames.get(driverDeviceIndex)) || ("Redmi".equals(brandNames.get(driverDeviceIndex))) || ("TECNO".equals(brandNames.get(driverDeviceIndex)))))))))) {
 	        modifiedXpath += "2]"; /* Append "2]" to xpath */
 	    }
         else if("POCO".equals(brandNames.get(driverDeviceIndex)) || "Redmi".equals(brandNames.get(driverDeviceIndex))){
@@ -897,20 +992,37 @@ public class AutomationFlow extends BaseClass {
         return modifiedXpath;
 	}
 	
-	private boolean checkOverlayPermission() {
-	    int androidVersion = Integer.parseInt(androidVersions.get(driverDeviceIndex));
+	private boolean checkOverlayPermission(String xpath) {
+        int androidVersion = Integer.parseInt(androidVersions.get(driverDeviceIndex));
         String deviceResolution = resolutions.get(driverDeviceIndex);
         String deviceBrandString = brandNames.get(driverDeviceIndex);
-	    /* Check if the Android version of the second connected device is greater than 10 */
-	    if ((androidVersion <= 10)){return false;}
-	    else if((androidVersion > 10) && ("1080x2400".equals(deviceResolution)) && (!"POCO".equals(deviceBrandString)) && (!"OPPO".equals(deviceBrandString))) {return true;}
+        String modelNamesString = modelNames.get(driverDeviceIndex);
+    
+        /* Check if the Android version of the second connected device is greater than 10 */
+        if (androidVersion <= 10) {
+            return false;
+        } else if (androidVersion > 10 && "1080x2400".equals(deviceResolution) && !"POCO".equals(deviceBrandString) && !"OPPO".equals(deviceBrandString)) {
+            if ("Pixel 6a".equals(modelNamesString)) {
+                try {
+        		WebElement element = driver.findElement(By.xpath(xpath));
+	            if (element.isDisplayed()) {
+	            	scrollToText("Namma Yatri Partner");
+	            }
+        	} catch (NoSuchElementException e) {
+                scrollToText("in.juspay.nammayatripartner.debug");
+        	}
+        }
+            return true;
+        }
+    
         scrollToText("Namma Yatri Partner");
         return true;
-	}
+    }
+    
    
 	private boolean checkAutoStartPermission() {
 	    /* Check if the brand name at index 1 is "google" or "Android" */
-	    return (brandNames.get(driverDeviceIndex).equals("google") || brandNames.get(driverDeviceIndex).equals("Android") || brandNames.get(driverDeviceIndex).equals("vivo") || brandNames.get(driverDeviceIndex).equals("samsung") || brandNames.get(driverDeviceIndex).equals("OPPO") || brandNames.get(driverDeviceIndex).equals("iQOO") || brandNames.get(driverDeviceIndex).equals("Realme") || brandNames.get(driverDeviceIndex).equals("realme") || brandNames.get(driverDeviceIndex).equals("OnePlus") || brandNames.get(driverDeviceIndex).equals("Redmi"));
+	    return (brandNames.get(driverDeviceIndex).equals("google") || brandNames.get(driverDeviceIndex).equals("Android") || brandNames.get(driverDeviceIndex).equals("vivo") || brandNames.get(driverDeviceIndex).equals("samsung") || brandNames.get(driverDeviceIndex).equals("OPPO") || brandNames.get(driverDeviceIndex).equals("iQOO") || brandNames.get(driverDeviceIndex).equals("Realme") || brandNames.get(driverDeviceIndex).equals("realme") || brandNames.get(driverDeviceIndex).equals("OnePlus") || brandNames.get(driverDeviceIndex).equals("Redmi") || brandNames.get(driverDeviceIndex).equals("TECNO"));
 	}
     
     public void validateMobileNumberAndOtp(String state, String sendKeysValue, String screen, WebDriver driver) throws InterruptedException, IOException {
