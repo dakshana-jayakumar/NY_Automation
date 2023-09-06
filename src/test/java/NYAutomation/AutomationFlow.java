@@ -69,11 +69,11 @@ public class AutomationFlow extends BaseClass {
 
     static Map<String, String> screenStatusMap = new HashMap<>();
 
-	private final String userMobileNumber = "7777777733";
-	private final String driverMobileNumber = "9999999933";
+	private final String newUserMobileNumber = "7777777733";
+	private final String newDriverMobileNumber = "9999999933";
 	
-	private final String secondUserMobileNumber = "7777777722";
-	private final String secondDriverMobileNumber = "9999999922";
+	private final String existingUserMobileNumber = "7777777722";
+	private final String existingDriverMobileNumber = "9999999922";
 	
 	private String cugUserMobileNumber = "8497879347";
 	private String cugDriverMobileNumber = "8497879347";
@@ -251,7 +251,7 @@ public class AutomationFlow extends BaseClass {
             	sendKeysValue = (isUser ? cugUserMobileNumber : cugDriverMobileNumber);
             }
             else {
-            	sendKeysValue = (isUser ? userMobileNumber : driverMobileNumber);
+            	sendKeysValue = (isUser ? newUserMobileNumber : newDriverMobileNumber);
             }
         }
         
@@ -268,7 +268,7 @@ public class AutomationFlow extends BaseClass {
             	sendKeysValue = (isUser ? cugUserMobileNumber : cugDriverMobileNumber);
             }
             else {
-            	sendKeysValue = (isUser ? secondUserMobileNumber : secondDriverMobileNumber);
+            	sendKeysValue = (isUser ? existingUserMobileNumber : existingDriverMobileNumber);
             }
         }
 
@@ -297,7 +297,7 @@ public class AutomationFlow extends BaseClass {
     	else if ("Select Namma Yatri Partner".equals(state)) {
             /* If the state is "Select Namma Yatri Partner"*/
             /* Call the checkOverlayPermission method to perform action */
-            boolean doAction = checkOverlayPermission(xpath);
+            boolean doAction = checkOverlayPermission();
             if(!doAction) {return;}
         }
         
@@ -511,6 +511,17 @@ public class AutomationFlow extends BaseClass {
         }
         
         else if ("Allow Permission".equals(state)) {
+            try {
+        		WebElement element = user.findElement(By.xpath(xpath));
+	            if (element.isDisplayed()) {
+	            	element.click();
+	            }
+        	} catch (NoSuchElementException e) {
+        	}
+        	return;
+        }
+
+        else if ("Emergency contacts Permission".equals(state)) {
             try {
         		WebElement element = user.findElement(By.xpath(xpath));
 	            if (element.isDisplayed()) {
@@ -893,6 +904,27 @@ public class AutomationFlow extends BaseClass {
          	}
          	return;
         }
+
+        else if ("Go To Home".equals(state)) {
+            user.findElement(AppiumBy.xpath(xpath)).click();
+            user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Help and Support']/../android.widget.LinearLayout")).click();
+            user.pressKey(new KeyEvent(AndroidKey.BACK));
+            return;
+        }
+
+        while ("Got it".equals(state)) {
+            try {
+    	        if (user.findElement(AppiumBy.xpath(xpath)).isDisplayed()) {
+                    System.out.println("Is Displayed");
+                    user.findElement(AppiumBy.xpath(xpath)).click();
+    	        }
+    	    }
+    	    catch (NoSuchElementException e) {
+                user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Help and Support']/../android.widget.LinearLayout")).click();
+                user.pressKey(new KeyEvent(AndroidKey.BACK));
+                return;
+    	    }
+        }
         
         while ("Remove all the fav".equals(state)) {
     	    try {
@@ -992,7 +1024,7 @@ public class AutomationFlow extends BaseClass {
         return modifiedXpath;
 	}
 	
-	private boolean checkOverlayPermission(String xpath) {
+	private boolean checkOverlayPermission() {
         int androidVersion = Integer.parseInt(androidVersions.get(driverDeviceIndex));
         String deviceResolution = resolutions.get(driverDeviceIndex);
         String deviceBrandString = brandNames.get(driverDeviceIndex);
@@ -1003,21 +1035,21 @@ public class AutomationFlow extends BaseClass {
             return false;
         } else if (androidVersion > 10 && "1080x2400".equals(deviceResolution) && !"POCO".equals(deviceBrandString) && !"OPPO".equals(deviceBrandString)) {
             if ("Pixel 6a".equals(modelNamesString)) {
-                try {
-        		WebElement element = driver.findElement(By.xpath(xpath));
-	            if (element.isDisplayed()) {
-	            	scrollToText("Namma Yatri Partner");
-	            }
-        	} catch (NoSuchElementException e) {
-                scrollToText("in.juspay.nammayatripartner.debug");
-        	}
+                while (true) {
+                    try {
+                        // WebElement element = driver.findElement(By.xpath(xpath));
+                        scrollToText("in.juspay.nammayatripartner.debug");
+                        return true;
+                        } catch (NoSuchElementException e) {
+                        scrollToText("Namma Yatri Partner");
+                        return true;
+                    }
+                }
+            }
         }
-            return true;
-        }
-    
-        scrollToText("Namma Yatri Partner");
         return true;
     }
+    
     
    
 	private boolean checkAutoStartPermission() {
@@ -1169,8 +1201,8 @@ public class AutomationFlow extends BaseClass {
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Remove']")).click();
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove It']")).click();
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Number']/../../android.widget.LinearLayout[1]/android.widget.TextView[2]")).click();
-                return;
     	    }
+            return;
     	}
         else if(state.contains("Add Alternate Number")){
             // Enter the first random phone number
