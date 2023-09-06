@@ -927,18 +927,20 @@ public class AutomationFlow extends BaseClass {
         }
         
         while ("Remove all the fav".equals(state)) {
-    	    try {
-    	        if (user.findElement(AppiumBy.xpath(xpath)).isDisplayed()) {
+            try {
+                WebElement element = user.findElement(AppiumBy.xpath(xpath));
+                if (element.isDisplayed()) {
                     System.out.println("Is Displayed");
-                    user.findElement(AppiumBy.xpath(xpath)).click();
+                    element.click();
                     user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove']")).click();
-    	        }
-    	    }
-    	    catch (NoSuchElementException e) {
+                }
+            } catch (StaleElementReferenceException e) {
+                System.out.println("Element has become stale. Retrying...");
+            } catch (NoSuchElementException e) {
                 System.out.println("Removed all the fav addresses");
                 return;
-    	    }
-    	}
+            }
+        }
         
          /* Function calls for both Customer and Driver */   
         {
@@ -1037,11 +1039,11 @@ public class AutomationFlow extends BaseClass {
             if ("Pixel 6a".equals(modelNamesString)) {
                 while (true) {
                     try {
-                        // WebElement element = driver.findElement(By.xpath(xpath));
-                        scrollToText("in.juspay.nammayatripartner.debug");
+                        driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='in.juspay.nammayatripartner.debug']")).click();
                         return true;
                         } catch (NoSuchElementException e) {
                         scrollToText("Namma Yatri Partner");
+                        driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Namma Yatri Partner']")).click();
                         return true;
                     }
                 }
