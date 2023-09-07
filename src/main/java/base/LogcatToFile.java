@@ -60,7 +60,7 @@ public class LogcatToFile {
      * @throws InterruptedException if the thread is interrupted.
      */
     private static void fetchLogsForDevice(String deviceSerialNumber) throws IOException, InterruptedException {
-        String adbPath = "/home/" + System.getProperty("user.name") + "/Library/Android/sdk/platform-tools/adb";
+        String adbPath = "/home/" + System.getProperty("user.name") + "/Android/Sdk/platform-tools/adb";
         String LogcatFileLocation = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator
                 + "logFile_" + deviceSerialNumber + ".txt";
 
@@ -198,7 +198,6 @@ public class LogcatToFile {
             deviceSerialNumber = devices.get(i);
             String readLogCatFile = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "LogFiles" + File.separator
                 + "logFile_" + deviceSerialNumber + ".txt";
-            boolean bundleVersionFound = false;
             String appDetails = "";
           
             try (BufferedReader reader = new BufferedReader(new FileReader(readLogCatFile))) {
@@ -222,9 +221,6 @@ public class LogcatToFile {
                     System.out.println("Version Details " + version);
 
                     // If the "bundle_version" is not found after looping through all the lines
-                    if (!bundleVersionFound) {
-                        System.out.println("Bundle Version not found for " + apkName);
-                    }
                     appDetails = "APK name : " + apkName + "\nVersion : " + version;
                     if (bundleVersion != null) {
                         appDetails += "\nBundle Version : " + bundleVersion;
@@ -267,7 +263,7 @@ public class LogcatToFile {
         Map<String, String> versions = new HashMap<>();
     
             try {
-                String aaptPath = "/Users/" + System.getProperty("user.name") + "/Library/Android/sdk/build-tools/32.1.0-rc1/aapt";
+                String aaptPath = "/home/" + System.getProperty("user.name") + "/Android/Sdk/build-tools/34.0.0/aapt";
                 // Execute the ‘aapt’ command to extract the version information
                 Process process = Runtime.getRuntime().exec(aaptPath + " dump badging " + appFilePath + " | grep Version");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));

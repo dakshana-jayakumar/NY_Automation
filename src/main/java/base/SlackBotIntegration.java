@@ -62,7 +62,7 @@ public class SlackBotIntegration {
                 .build();
         System.out.println("Build Completed");
         App app = new App(appConfig);
-        sendMessageToSlack("Hey People! You can upload the APK in the `Ny Automation` slack bot app, you will receive the reports and screen recordings here 🙌🥳");
+        sendMessageToSlack("Hey People! You can upload the APK in the `Ny Automation` slack bot app, you will receive the reports here");
         
     
         // Create an array to hold the mutable state of the messageSent variable
@@ -130,8 +130,8 @@ public class SlackBotIntegration {
             } catch (TimeoutException e) {
                 e.printStackTrace();
             }
-            sendMessageToSlack("Hey <@" + req.getPayload().getUserId() + ">, your report and screen recording are attached above☝️");
-            String thankingMsg = String.format("Hey %s, Automation is completed 🥳. Visit `automation-reports` channel for the results", req.getPayload().getUserName());
+            sendMessageToSlack("Hey <@" + req.getPayload().getUserId() + ">, your report is attached above☝️");
+            String thankingMsg = String.format("Hey %s, Automation is completed. Visit `automation-reports` channel for the results", req.getPayload().getUserName());
             ctx.say(thankingMsg);
             String endMessage = String.format("Hey Users, Upload APKs to perfom Automation 🤖⚙️🦾 ", req.getPayload());
             ctx.say(endMessage);
@@ -158,10 +158,10 @@ public class SlackBotIntegration {
             } catch (TimeoutException e) {
                 e.printStackTrace();
             }
-            sendMessageToSlack("Hey <@" + req.getPayload().getUserId() + ">, your report and screen recording are attached above☝️");
-            String thankingMsg = String.format("Hey %s, Automation is completed 🥳. Visit `automation-reports` channel for the results", req.getPayload().getUserName());
+            sendMessageToSlack("Hey <@" + req.getPayload().getUserId() + ">, your report is attached above☝️");
+            String thankingMsg = String.format("Hey %s, Automation is completed. Visit `automation-reports` channel for the results", req.getPayload().getUserName());
             ctx.say(thankingMsg);
-            String endMessage = String.format("Hey Users, Upload APKs to perfom Automation 🤖⚙️🦾", req.getPayload().getUserName());
+            String endMessage = String.format("Hey Users, Upload APKs to perfom Automation 🤖", req.getPayload().getUserName());
             ctx.say(endMessage);
 
             return ctx.ack();

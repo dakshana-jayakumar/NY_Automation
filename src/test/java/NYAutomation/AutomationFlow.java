@@ -94,8 +94,7 @@ public class AutomationFlow extends BaseClass {
 		/* Add Allure report cleanup code here */
     	String confirmation = System.getProperty("confirmation");
     	String[] directoryPaths = {
-                    "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
-    	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "allure-results",
+                    "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "allure-results",
     			 	"/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
     	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "ScreenRecordings"
     	    	};
@@ -286,6 +285,8 @@ public class AutomationFlow extends BaseClass {
         
         else if ("AutoStart".equals(state)) {
         	int androidVersion = Integer.parseInt(androidVersions.get(driverDeviceIndex));
+            driver.findElement(AppiumBy.xpath(xpath)).click();
+
     	    if (androidVersion == 10) {
     	        Thread.sleep(2000);
                 KeyEvent appSwitcherKeyEvent = new KeyEvent(AndroidKey.BACK);
@@ -299,7 +300,7 @@ public class AutomationFlow extends BaseClass {
     	    	driver.findElement(AppiumBy.xpath("//android.view.ViewGroup/android.widget.ImageView")).click();
     	    	driver.findElement(AppiumBy.xpath("//android.view.ViewGroup/android.widget.ImageView")).click();
     	    }
-    	    return;
+            return;
         }
         
         else if ("AutoStart Screen Back Icon".equals(state) && checkAutoStartPermission()) {
@@ -1207,41 +1208,32 @@ public class AutomationFlow extends BaseClass {
 	public static void sendMp4ToSlack(Path videoFilePath, String message) throws InterruptedException {
         try {
             Thread.sleep(15000);
-            System.out.println("check 1");
             String channelID = "";
             String slackToken = "";
-            System.out.println("check 2");
             OkHttpClient client = new OkHttpClient();
             // MediaType mediaType = MediaType.parse("application/mp4");
             MediaType mediaType = MediaType.parse("video/mp4");
-            System.out.println("check 3");
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("file", videoFilePath.toString(), RequestBody.create(mediaType, new java.io.File(videoFilePath.toString())))
                     .addFormDataPart("channels", channelID)
                     .addFormDataPart("initial_comment", message)
                     .build();
-            System.out.println("check 4");
             Request request = new Request.Builder()
                     .url("")
                     .post(requestBody)
                     .addHeader("Authorization", "Bearer " + slackToken)
                     .build();
-            System.out.println("check 5");
             Response response = client.newCall(request).execute();
             System.out.println("response :: " + response.body());
-            System.out.println("response 123 :: " + response);
-            System.out.println("check 6");
             if (response.isSuccessful()) {
                 System.out.println("Video file sent to Slack successfully.");
             } else {
                 System.err.println("Failed to send video file to Slack. Response code: " + response.code());
             }
-            System.out.println("check 6");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("check 7");
     }
 
 
@@ -1255,10 +1247,8 @@ public class AutomationFlow extends BaseClass {
             driver.quit();
         }
 
-        String allureReportFolder = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
-    	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "allure-results";
-        String zipFilePath = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "src" + File.separator + "main"
-    	                    + File.separator + "java" + File.separator + "NYAutomation" + File.separator + "resources" + File.separator + "allure-results" + File.separator + "allure-report.zip";
+        String allureReportFolder = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "allure-results";
+        String zipFilePath = "/home/" + System.getProperty("user.name") + File.separator + "Desktop" + File.separator + "Automation" + File.separator + "NY_Automation" + File.separator + "allure-results" + File.separator + "allure-report.zip";
         
         zipAllureReportFolder(allureReportFolder, zipFilePath);
 

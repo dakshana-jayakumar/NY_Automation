@@ -51,7 +51,7 @@ public class BaseClass {
         capabilities.setCapability("fullReset", true);
         capabilities.setCapability("app", appFilePath);
         
-        AndroidDriver driver = new AndroidDriver(new URL("http://0.0.0.0:4724"), capabilities);
+        AndroidDriver driver = new AndroidDriver(new URL("http://0.0.0.0:4723"), capabilities);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         return driver;
     }
@@ -68,7 +68,7 @@ public class BaseClass {
         capabilities.setCapability("fullReset", true);
         capabilities.setCapability("app", appFilePath);
 
-        AndroidDriver driver = new AndroidDriver(new URL("http://0.0.0.0:4725"), capabilities);
+        AndroidDriver driver = new AndroidDriver(new URL("http://0.0.0.0:4724"), capabilities);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 		return driver;
     }
