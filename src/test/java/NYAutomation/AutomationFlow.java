@@ -931,6 +931,7 @@ public class AutomationFlow extends BaseClass {
                 WebElement element = user.findElement(AppiumBy.xpath(xpath));
                 if (element.isDisplayed()) {
                     System.out.println("Is Displayed");
+                    Thread.sleep(4000);
                     element.click();
                     user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove']")).click();
                 }
