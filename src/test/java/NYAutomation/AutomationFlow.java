@@ -72,7 +72,7 @@ public class AutomationFlow extends BaseClass {
 	private final String newUserMobileNumber = "7777777733";
 	private final String newDriverMobileNumber = "9999999933";
 	
-	private final String existingUserMobileNumber = "7777777722";
+	private final String existingUserMobileNumber = "7777777724";
 	private final String existingDriverMobileNumber = "9999999922";
 	
 	private String cugUserMobileNumber = "8497879347";
@@ -594,13 +594,10 @@ public class AutomationFlow extends BaseClass {
         
         else if ("Book Ride Check".equals(state)) {
             try {
-                System.out.println("inside if");
                 WebElement bookRideElement = user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Book Ride']"));
                 if (bookRideElement.isDisplayed()) {
-                    System.out.println("Is Displayed");
                     bookRideElement.click();
                 } else {
-                    System.out.println("inside else");
                 }
                 return;
             } catch (Exception e) {
@@ -733,17 +730,6 @@ public class AutomationFlow extends BaseClass {
     		}
     		return;
     	}
-    	
-    	else if (("Writing user reason".equals(state)) || ("Writing driver reason".equals(state))) {
-        	((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.S));
-            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.O));
-            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.R));
-            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.R));
-            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.Y));
-            Thread.sleep(2000);
-            ((AndroidDriver) (isUser ? user : driver)).pressKey(new KeyEvent(AndroidKey.BACK));
-        	return;
-        }
         
     	else if ("Waiting Time".equals(state)) {
         	Thread.sleep(5000);
@@ -905,33 +891,12 @@ public class AutomationFlow extends BaseClass {
          	return;
         }
 
-        else if ("Go To Home".equals(state)) {
-            user.findElement(AppiumBy.xpath(xpath)).click();
-            user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Help and Support']/../android.widget.LinearLayout")).click();
-            user.pressKey(new KeyEvent(AndroidKey.BACK));
-            return;
-        }
-
-        while ("Got it".equals(state)) {
-            try {
-    	        if (user.findElement(AppiumBy.xpath(xpath)).isDisplayed()) {
-                    System.out.println("Is Displayed");
-                    user.findElement(AppiumBy.xpath(xpath)).click();
-    	        }
-    	    }
-    	    catch (NoSuchElementException e) {
-                user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Help and Support']/../android.widget.LinearLayout")).click();
-                user.pressKey(new KeyEvent(AndroidKey.BACK));
-                return;
-    	    }
-        }
-        
         while ("Remove all the fav".equals(state)) {
             try {
                 WebElement element = user.findElement(AppiumBy.xpath(xpath));
                 if (element.isDisplayed()) {
                     System.out.println("Is Displayed");
-                    Thread.sleep(4000);
+                    Thread.sleep(3000);
                     element.click();
                     user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove']")).click();
                 }
@@ -956,7 +921,7 @@ public class AutomationFlow extends BaseClass {
         /* Function calls only in driver application */
         {
 	        /* Function for checking scroll in choose language screen in driver */
-	        languageScroll(screen, state);
+	        languageScroll(screen, state, xpath);
 	        
 	        /* Function for checking alternate mobile number validation for driver */
 	        if(state.contains("Alternate Number")){alternateMobileNumberValidation(state, xpath);return;}
@@ -973,7 +938,7 @@ public class AutomationFlow extends BaseClass {
     public Wait<AndroidDriver> waitTime(boolean isUser) {
         /* Creating a wait object to wait for the user or driver */
         Wait<AndroidDriver> wait = new FluentWait<>(isUser ? user : driver)
-                .withTimeout(Duration.ofSeconds(60))
+                .withTimeout(Duration.ofSeconds(180))
                 .pollingEvery(Duration.ofMillis(3000))
                 .ignoring(Exception.class);
         return wait;
@@ -1034,10 +999,13 @@ public class AutomationFlow extends BaseClass {
         String modelNamesString = modelNames.get(driverDeviceIndex);
     
         /* Check if the Android version of the second connected device is greater than 10 */
+        if ("SM-A032F".equals(modelNamesString)) {
+                return false;
+        }
         if (androidVersion <= 10) {
             return false;
         } else if (androidVersion > 10 && "1080x2400".equals(deviceResolution) && !"POCO".equals(deviceBrandString) && !"OPPO".equals(deviceBrandString)) {
-            if ("Pixel 6a".equals(modelNamesString)) {
+            if ("Pixel 6a".equals(modelNamesString) || "google".equals(deviceBrandString)) {
                 while (true) {
                     try {
                         driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='in.juspay.nammayatripartner.debug']")).click();
@@ -1080,11 +1048,16 @@ public class AutomationFlow extends BaseClass {
         }
 	}
     
-    public void languageScroll(String screen, String state) {
-    	/* if any specific cases have to be performed */
-        if ("Choose Language".equals(screen) && ("Kannada".equals(state)) && !"Update Language".equals(screen) && !("1080x2400".equals(resolutions.get(driverDeviceIndex)))) {
-            scrollToText("Tamil");
+    public void languageScroll(String screen, String state, String xpath) {
+        /* if any specific cases have to be performed */
+        if ("Choose language".equals(state)) {
+            boolean tamilDisplayed = driver.findElement(AppiumBy.xpath(xpath)).isDisplayed();
+            while (!tamilDisplayed) {
+                scrollToText("Tamil");
+                tamilDisplayed = driver.findElement(AppiumBy.xpath(xpath)).isDisplayed();
+            }
         }
+        return;
     }
     
     public void cancelRide(String state, String xpath) throws InterruptedException {

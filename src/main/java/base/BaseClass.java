@@ -17,8 +17,8 @@ public class BaseClass {
     public static int deviceIndex = 0;
     public static String version = "";
     public static String appPath = "";
-    public static String userApkName = "NY-USER-MASTER.apk";
-    public static String driverApkName = "NY-DRIVER-MASTER.apk";
+    public static String userApkName = "ny-user-04-09.apk";
+    public static String driverApkName = "app-nyp-1st-sept-2.apk";
    
     public static void setup(boolean isUser) throws IOException {
         if((deviceIndex < ADBDeviceFetcher.devices.size())){
@@ -73,9 +73,9 @@ public class BaseClass {
                LogcatToFile.searchApiErr();
                LogcatToFile.searchJavaScriptError();
                LogcatToFile.fetchExceptions();
-           }
-	  }
-   }
+            }
+	    }
+    }
 
     private static void setAndroidCapability(String udid, String appFile, DesiredCapabilities capabilities, boolean isUser) throws IOException {
         appPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "main" + File.separator
