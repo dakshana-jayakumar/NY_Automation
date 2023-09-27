@@ -454,13 +454,13 @@ public class AutomationFlow extends BaseClass {
             Thread.sleep(2000);
             return;
         }
-
+        
         else if ("Home Press".equals(state)) {
             Thread.sleep(2000);
             (isUser ? user : driver).pressKey(new KeyEvent(AndroidKey.HOME));
             return;
         }
-
+        
         else if ("SwipeFromUp".equals(state)) {
             Thread.sleep(2000);
             /* Perform the pull down the notifications */
@@ -471,7 +471,7 @@ public class AutomationFlow extends BaseClass {
         }
         
         else if ("Swipe".equals(state)) {
-            int loopCount = 2;
+            int loopCount = 3;
             for (int i = 0; i < loopCount; i++) {
                 By buttonLayoutLocator = By.xpath(xpath);
                 WebElement element = user.findElement(buttonLayoutLocator);
@@ -736,68 +736,12 @@ public class AutomationFlow extends BaseClass {
         	return;
         }
         
-        else if ("Write Feedback".equals(state)) {
-            user.findElement(AppiumBy.xpath(xpath)).click();
-            user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Safe Ride']")).click();
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.G));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.D));
-            Thread.sleep(3000);
-            user.pressKey(new KeyEvent(AndroidKey.BACK));
-        	return;
-        }
-
-        else if ("Report an issue".equals(state)) {
-            user.findElement(AppiumBy.xpath(xpath)).click();
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.G));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.O));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.D));
-            Thread.sleep(3000);
-            user.pressKey(new KeyEvent(AndroidKey.BACK));
-        	return;
-        }
-
-        else if ("Report Lost Item".equals(state)) {
-            driver.findElement(AppiumBy.xpath(xpath)).click();
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.L));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.O));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.S));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.T));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.SPACE));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.M));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.Y));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.SPACE));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.B));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.A));
-            ((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.G));
-            Thread.sleep(3000);
-            return;
-        }
-        
         else if ("Delete icon".equals(state)) {
         	int loopCount = 10;
             for (int i = 0; i < loopCount; i++) {
             	((AndroidDriver) driver).pressKey(new KeyEvent(AndroidKey.DEL));
             }
         	return;
-        }   
-        
-        else if ("Source Autotype".equals(state)) {
-        	((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.I));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.N));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.D));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.N));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.G));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
-            Thread.sleep(2000);
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
-            return;
         }
 
         else if ("Notification permission".equals(state)) {
@@ -829,17 +773,6 @@ public class AutomationFlow extends BaseClass {
                 ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.DEL));
                 Thread.sleep(1000);
                 }
-            return;
-        }
-
-        else if ("Enter Name".equals(state)) {
-            user.findElement(AppiumBy.xpath(xpath)).click();
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.R));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.A));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.M));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.U));
-            ((AndroidDriver) user).pressKey(new KeyEvent(AndroidKey.BACK));
-
             return;
         }
         

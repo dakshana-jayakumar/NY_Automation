@@ -17,8 +17,8 @@ public class BaseClass {
     public static int deviceIndex = 0;
     public static String version = "";
     public static String appPath = "";
-    public static String userApkName = "ny-user-04-09.apk";
-    public static String driverApkName = "app-nyp-1st-sept-2.apk";
+    public static String userApkName = "nyuser-12th-accessibility.apk";
+    public static String driverApkName = "nyp-driver-location-27th-sept.apk";
    
     public static void setup(boolean isUser) throws IOException {
         if((deviceIndex < ADBDeviceFetcher.devices.size())){
