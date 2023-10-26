@@ -397,7 +397,41 @@ public class AutomationFlow extends BaseClass {
                 return;
             }
         }
-        
+
+        else if ("Scroll Function Driver".equals(state)) {
+            int androidVersion = Integer.parseInt(androidVersions.get(driverDeviceIndex));
+        	By buttonLayoutLocator = By.xpath(xpath);
+            WebElement source = driver.findElement(buttonLayoutLocator);
+            if (androidVersion == 9 || androidVersion == 10 || androidVersion == 11 || androidVersion == 12 || androidVersion == 13) {
+                boolean canScrollMore = (Boolean)driver.executeScript("mobile: scrollGesture", ImmutableMap.of(
+                        "left", 100, "top", 100, "width", 1200, "height", 1200,
+                        "direction", "down",
+                        "percent", 3.0
+                        ));
+                return;
+            }
+            else {
+        		// Duration of the drag gesture in milliseconds
+        		int durationInMillis = 3000;
+                int startX = source.getLocation().getX();
+                int startY = source.getLocation().getY();
+                int endX = startX + 500; // Drag the element horizontally by 500 pixels
+                int endY = startY;
+
+                long startTime = System.currentTimeMillis();
+
+                while (System.currentTimeMillis() - startTime <= durationInMillis) {
+                    TouchAction<?> touchAction = new TouchAction<>(driver);
+                    touchAction.press(PointOption.point(startX, startY))
+                        .waitAction(WaitOptions.waitOptions(Duration.ofMillis(1000)))
+                        .moveTo(PointOption.point(endX, endY))
+                        .release()
+                        .perform();
+                }
+                return;
+            }
+        }
+
         else if (("Fetch Otp").equals(state)) {
             // Fetch correct OTP
             String rideOtp = "";
@@ -881,7 +915,7 @@ public class AutomationFlow extends BaseClass {
         else if ("Languages update".equals(state)) {
         	scrollToText("About me");
         	try {
-         		WebElement element = driver.findElement(By.xpath("//android.widget.TextView[@text='Languages spoken']/../../android.widget.LinearLayout/android.widget.TextView[@text='Add']"));
+         		WebElement element = driver.findElement(By.xpath("//android.widget.TextView[@text='About me']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.TextView[@text='Add']"));
  	            if (element.isDisplayed()) {
  	            	element.click();
  	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]")).click();
@@ -893,7 +927,7 @@ public class AutomationFlow extends BaseClass {
 	            	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Update']")).click();
  	            }
          	} catch (NoSuchElementException e) {
-         		driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Languages spoken']/../../android.widget.LinearLayout/android.widget.ImageView")).click();
+         		driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='About me']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.ImageView")).click();
          		driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[1]")).click();
             	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[2]")).click();
             	driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Select the languages you can speak']/../android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout/android.widget.LinearLayout[3]")).click();
@@ -917,38 +951,15 @@ public class AutomationFlow extends BaseClass {
             return;
         }
 
-        else if ("Start Ride".equals(state)) {
-    	    By buttonLayoutLocator = By.xpath(xpath);
-    	    WebElement source = user.findElement(buttonLayoutLocator);
-    	    boolean startRideDisplayed = false;
-    	    while (!startRideDisplayed) {
-    	        try {
-    	            WebElement startRideElement = user.findElement(By.xpath("//android.widget.TextView[@text='Start Ride']"));
-    	            if (startRideElement.isDisplayed() && startRideElement.isEnabled()) {
-    	                startRideDisplayed = true;
-    	                startRideElement.click();  // Perform the desired action on the "Start Ride" element
-    	            }
-    	        } catch (NoSuchElementException | StaleElementReferenceException e) {
-    	        }
-    	        // Scroll the layout by dragging from source to destination coordinates
-    	        ((JavascriptExecutor) user).executeScript("mobile: dragGesture", ImmutableMap.of(
-    	                "elementId", ((RemoteWebElement) source).getId(),
-    	                "endX", 447,
-    	                "endY", 400
-    	        ));
-    	    }
-            return;
-    	}
-
         while ("Remove all the fav".equals(state)) {
-            user.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
+            (isUser ? user : driver).manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
             try {
-                WebElement element = user.findElement(AppiumBy.xpath(xpath));
+                WebElement element = (isUser ? user : driver).findElement(AppiumBy.xpath(xpath));
                 if (element.isDisplayed()) {
                     System.out.println("Is Displayed");
                     Thread.sleep(1000);
                     element.click();
-                    user.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove']")).click();
+                    (isUser ? user : driver).findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove']")).click();
                 }
             } catch (StaleElementReferenceException e) {
                 System.out.println("Element has become stale. Retrying...");
@@ -1225,12 +1236,10 @@ public class AutomationFlow extends BaseClass {
     	    }
     	    catch (NoSuchElementException e) {
                 System.out.println("Alternative number already added");
-                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Offline']/../../../../android.widget.LinearLayout[1]")).click();
-                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Driver Details']")).click();
-                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Number']/../../android.widget.LinearLayout[1]/android.widget.ImageView")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Number']/../../../android.widget.LinearLayout/android.widget.ImageView")).click();
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Remove']")).click();
                 driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Yes, Remove It']")).click();
-                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Alternate Number']/../../android.widget.LinearLayout[1]/android.widget.TextView[2]")).click();
+                driver.findElement(AppiumBy.xpath("//android.widget.TextView[@text='Add']")).click();
     	    }
             return;
     	}
