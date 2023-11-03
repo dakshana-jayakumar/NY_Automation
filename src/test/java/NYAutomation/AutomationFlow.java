@@ -575,11 +575,11 @@ public class AutomationFlow extends BaseClass {
         }
 
         else if ("Driver map render".equals(state)) {
-            (isUser ? user : driver).manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+            (isUser ? user : driver).manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
             try {
                 By buttonLayoutLocator = By.xpath(xpath);
                 while (isElementPresent(buttonLayoutLocator, isUser ? user : driver)) {
-                    WebElement element = user.findElement(By.xpath("//android.widget.TextView[@text='Update']"));
+                    WebElement element = driver.findElement(By.xpath("//android.widget.TextView[@text='Update']"));
                     element.click();
                     wait.until(ExpectedConditions.invisibilityOfElementLocated(buttonLayoutLocator));
                 }
